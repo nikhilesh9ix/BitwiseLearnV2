@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
-import { cookies } from "next/headers";
 
 interface LoginProp {
   email: string;
@@ -47,27 +46,28 @@ export async function POST(req: NextRequest) {
       refreshToken: tokens.refresh_token ?? tokens.refreshToken ?? null,
     };
 
-    const cookieStore = await cookies();
-    if (normalizedTokens.accessToken) {
-      cookieStore.set("token", normalizedTokens.accessToken, {
-        ...getCookieOptions(),
-        maxAge: 60 * 60 * 24,
-      });
-    }
-    if (normalizedTokens.refreshToken) {
-      cookieStore.set("refreshToken", normalizedTokens.refreshToken, {
-        ...getCookieOptions(),
-        maxAge: 60 * 60 * 24 * 20,
-      });
-    }
-
-    return NextResponse.json(
+    const nextResponse = NextResponse.json(
       {
         ...payload,
         tokens: normalizedTokens,
       },
       { status: 200 },
     );
+
+    if (normalizedTokens.accessToken) {
+      nextResponse.cookies.set("token", normalizedTokens.accessToken, {
+        ...getCookieOptions(),
+        maxAge: 60 * 60 * 24,
+      });
+    }
+    if (normalizedTokens.refreshToken) {
+      nextResponse.cookies.set("refreshToken", normalizedTokens.refreshToken, {
+        ...getCookieOptions(),
+        maxAge: 60 * 60 * 24 * 20,
+      });
+    }
+
+    return nextResponse;
   } catch (error: unknown) {
     const statusCode = axios.isAxiosError(error)
       ? (error.response?.status ?? 500)
