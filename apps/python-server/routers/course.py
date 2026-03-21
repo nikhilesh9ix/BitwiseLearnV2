@@ -9,6 +9,7 @@ from schemas.course import (
 )
 from utils.api_response import api_response
 from middleware.auth import get_current_user, admin_only, require_roles
+from middleware.auth import not_student
 from models.course import Course
 from models.course_section import CourseSection
 from models.course_content import CourseLearningContent
@@ -725,7 +726,7 @@ async def get_course_enrollments_by_batch(id: str, current_user: dict = Depends(
 
 
 @router.post("/add-course-enrollment/")
-async def add_course_enrollment(body: AddEnrollmentRequest, current_user: dict = Depends(get_current_user)):
+async def add_course_enrollment(body: AddEnrollmentRequest, current_user: dict = Depends(not_student)):
     course_id = PydanticObjectId(body.course_id)
     batch_id = PydanticObjectId(body.batch_id)
 
@@ -746,7 +747,7 @@ async def add_course_enrollment(body: AddEnrollmentRequest, current_user: dict =
 
 
 @router.delete("/remove-course-enrollment/{id}")
-async def remove_course_enrollment(id: str, current_user: dict = Depends(get_current_user)):
+async def remove_course_enrollment(id: str, current_user: dict = Depends(not_student)):
     enrollment = await CourseEnrollment.get(PydanticObjectId(id))
     if not enrollment:
         return api_response(404, "Enrollment not found", error="Not found")

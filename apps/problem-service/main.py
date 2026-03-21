@@ -1,8 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
-from shared.config import get_settings
+from shared.config import connect_to_mongo, get_settings
 from shared.models.user import User
 from shared.models.institution import Institution
 from shared.models.vendor import Vendor
@@ -26,8 +25,7 @@ SERVICE_MODELS = [
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    client = AsyncIOMotorClient(settings.DATABASE_URL)
-    db_name = settings.DATABASE_URL.rsplit("/", 1)[-1].split("?")[0] or "bitwiselearn"
+    client, db_name = await connect_to_mongo(settings)
     await init_beanie(database=client[db_name], document_models=SERVICE_MODELS)
     print(f"[problem-service] Connected to MongoDB: {db_name}")
     yield

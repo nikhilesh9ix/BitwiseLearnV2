@@ -19,6 +19,24 @@ import math
 router = APIRouter(prefix="/api/v1/reports", tags=["Reports"])
 
 
+async def _load_students_map(student_ids: list[PydanticObjectId]) -> dict[str, Student]:
+    if not student_ids:
+        return {}
+
+    unique_ids = list(dict.fromkeys(student_ids))
+    students = await Student.find({"_id": {"$in": unique_ids}}).to_list()
+    return {str(student.id): student for student in students}
+
+
+async def _load_batches_map(batch_ids: list[PydanticObjectId]) -> dict[str, Batch]:
+    if not batch_ids:
+        return {}
+
+    unique_ids = list(dict.fromkeys(batch_ids))
+    batches = await Batch.find({"_id": {"$in": unique_ids}}).to_list()
+    return {str(batch.id): batch for batch in batches}
+
+
 @router.get("/get-stats-count")
 async def get_stats_count(current_user: dict = Depends(admin_only)):
     admins = await User.find_all().count()
@@ -61,9 +79,11 @@ async def get_assessment_report(
         AssessmentSubmission.assessment_id == assessment.id
     ).skip((page - 1) * limit).limit(limit).to_list()
 
+    students_by_id = await _load_students_map([sub.student_id for sub in submissions])
+
     data = []
     for sub in submissions:
-        student = await Student.get(sub.student_id)
+        student = students_by_id.get(str(sub.student_id))
         data.append({
             "id": str(sub.id),
             "student_id": str(sub.student_id),
@@ -106,9 +126,13 @@ async def get_course_report(
         CourseEnrollment.batch_id == PydanticObjectId(batch_id),
     ).skip((page - 1) * limit).limit(limit).to_list()
 
+    batches_by_id = await _load_batches_map(
+        [e.batch_id for e in enrollments if e.batch_id]
+    )
+
     data = []
     for e in enrollments:
-        batch = await Batch.get(e.batch_id) if e.batch_id else None
+        batch = batches_by_id.get(str(e.batch_id)) if e.batch_id else None
         data.append({
             "id": str(e.id),
             "batch_id": str(e.batch_id),

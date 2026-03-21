@@ -19,6 +19,8 @@ router = APIRouter(prefix="/api/v1/institutions", tags=["Institutions"])
 
 _create_roles = require_roles(UserType.SUPERADMIN, UserType.ADMIN, UserType.VENDOR)
 _delete_roles = require_roles(UserType.SUPERADMIN, UserType.ADMIN, UserType.VENDOR)
+_update_roles = require_roles(UserType.SUPERADMIN, UserType.ADMIN, UserType.INSTITUTION, UserType.VENDOR)
+_read_roles = require_roles(UserType.SUPERADMIN, UserType.ADMIN, UserType.INSTITUTION, UserType.VENDOR)
 
 
 @router.post("/create-institution")
@@ -61,11 +63,14 @@ async def create_institution(body: CreateInstitutionRequest, current_user: dict 
 
 
 @router.get("/get-all-institution")
-async def get_all_institutions(current_user: dict = Depends(get_current_user)):
+async def get_all_institutions(current_user: dict = Depends(_read_roles)):
     if current_user["type"] == UserType.VENDOR:
         institutions = await Institution.find(
             Institution.created_by_vendor_id == PydanticObjectId(current_user["id"])
         ).to_list()
+    elif current_user["type"] == UserType.INSTITUTION:
+        inst = await Institution.get(PydanticObjectId(current_user["id"]))
+        institutions = [inst] if inst else []
     else:
         institutions = await Institution.find_all().to_list()
 
@@ -85,6 +90,23 @@ async def get_institution_by_id(id: str, current_user: dict = Depends(get_curren
     inst = await Institution.get(PydanticObjectId(id))
     if not inst:
         return api_response(404, "Institution not found", error="Not found")
+
+    if current_user["type"] == UserType.INSTITUTION and str(inst.id) != current_user["id"]:
+        return api_response(403, "Not authorized", error="Forbidden")
+
+    if current_user["type"] == UserType.VENDOR and str(inst.created_by_vendor_id) != current_user["id"]:
+        return api_response(403, "Not authorized", error="Forbidden")
+
+    if current_user["type"] == UserType.STUDENT:
+        student = await Student.get(PydanticObjectId(current_user["id"]))
+        if not student or str(student.institute_id) != str(inst.id):
+            return api_response(403, "Not authorized", error="Forbidden")
+
+    if current_user["type"] == UserType.TEACHER:
+        teacher = await Teacher.get(PydanticObjectId(current_user["id"]))
+        if not teacher or str(teacher.institute_id) != str(inst.id):
+            return api_response(403, "Not authorized", error="Forbidden")
+
     return api_response(200, "Institution fetched", data={
         "id": str(inst.id), "name": inst.name, "email": inst.email,
         "address": inst.address, "pin_code": inst.pin_code, "tagline": inst.tagline,
@@ -97,7 +119,10 @@ async def get_institution_by_id(id: str, current_user: dict = Depends(get_curren
 
 
 @router.get("/get-institution-by-vendor/{id}")
-async def get_institutions_by_vendor(id: str, current_user: dict = Depends(get_current_user)):
+async def get_institutions_by_vendor(id: str, current_user: dict = Depends(_read_roles)):
+    if current_user["type"] == UserType.VENDOR and current_user["id"] != id:
+        return api_response(403, "Not authorized", error="Forbidden")
+
     institutions = await Institution.find(
         Institution.created_by_vendor_id == PydanticObjectId(id)
     ).to_list()
@@ -110,10 +135,16 @@ async def get_institutions_by_vendor(id: str, current_user: dict = Depends(get_c
 
 
 @router.put("/update-institution-by-id/{id}")
-async def update_institution(id: str, body: UpdateInstitutionRequest, current_user: dict = Depends(get_current_user)):
+async def update_institution(id: str, body: UpdateInstitutionRequest, current_user: dict = Depends(_update_roles)):
     inst = await Institution.get(PydanticObjectId(id))
     if not inst:
         return api_response(404, "Institution not found", error="Not found")
+
+    if current_user["type"] == UserType.VENDOR and str(inst.created_by_vendor_id) != current_user["id"]:
+        return api_response(403, "Not authorized", error="Forbidden")
+
+    if current_user["type"] == UserType.INSTITUTION and str(inst.id) != current_user["id"]:
+        return api_response(403, "Not authorized", error="Forbidden")
 
     update_data = body.model_dump(exclude_none=True)
     for key, val in update_data.items():
@@ -128,6 +159,9 @@ async def delete_institution(id: str, current_user: dict = Depends(_delete_roles
     inst = await Institution.get(PydanticObjectId(id))
     if not inst:
         return api_response(404, "Institution not found", error="Not found")
+
+    if current_user["type"] == UserType.VENDOR and str(inst.created_by_vendor_id) != current_user["id"]:
+        return api_response(403, "Not authorized", error="Forbidden")
 
     oid = PydanticObjectId(id)
     # Cascade: delete batches, teachers, students

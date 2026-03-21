@@ -17,8 +17,6 @@ async function handleLogin({ data }: { data: Prop }) {
   const response = await axios.post("/api/login", data);
   const resData = response.data;
 
-  // save role
-  localStorage.setItem("role", data.role);
   if (resData?.tokens?.accessToken) {
     localStorage.setItem("accessToken", resData.tokens.accessToken);
   }

@@ -4,9 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
-from config import get_settings
+from config import connect_to_mongo, get_settings
 from models import ALL_MODELS
 from services.queue import close_connection as close_mq
 
@@ -34,8 +33,7 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["200/10minutes"])
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    client = AsyncIOMotorClient(settings.DATABASE_URL)
-    db_name = settings.DATABASE_URL.rsplit("/", 1)[-1].split("?")[0] or "bitwiselearn"
+    client, db_name = await connect_to_mongo(settings)
     await init_beanie(database=client[db_name], document_models=ALL_MODELS)
     print(f"Connected to MongoDB: {db_name}")
 

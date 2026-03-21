@@ -5,7 +5,9 @@ export async function POST() {
 
   const cookiesToClear = [
     "token",
+    "refreshToken",
     "role",
+    "reset_token",
   ];
 
   cookiesToClear.forEach((name) => {

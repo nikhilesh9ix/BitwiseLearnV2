@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-tabs": "^1.1.13",
     "@uiw/react-md-editor": "v3.6.0",
     "axios": "^1.13.2",

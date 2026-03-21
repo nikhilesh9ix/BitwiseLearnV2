@@ -36,11 +36,12 @@ async def admin_login(body: LoginRequest, response: Response):
 
     access_token = generate_access_token(str(user.id), user.role)
     refresh_token = generate_refresh_token(str(user.id), user.role)
-    _set_auth_cookies(response, access_token, refresh_token)
-    return api_response(200, "Login successful", data={
+    resp = api_response(200, "Login successful", data={
         "id": str(user.id), "name": user.name, "email": user.email, "role": user.role,
         "tokens": {"access_token": access_token, "refresh_token": refresh_token}
     })
+    _set_auth_cookies(resp, access_token, refresh_token)
+    return resp
 
 
 @router.post("/institution/login")
@@ -53,11 +54,12 @@ async def institution_login(body: LoginRequest, response: Response):
 
     access_token = generate_access_token(str(inst.id), UserType.INSTITUTION)
     refresh_token = generate_refresh_token(str(inst.id), UserType.INSTITUTION)
-    _set_auth_cookies(response, access_token, refresh_token)
-    return api_response(200, "Login successful", data={
+    resp = api_response(200, "Login successful", data={
         "id": str(inst.id), "name": inst.name, "email": inst.email, "type": UserType.INSTITUTION,
         "tokens": {"access_token": access_token, "refresh_token": refresh_token}
     })
+    _set_auth_cookies(resp, access_token, refresh_token)
+    return resp
 
 
 @router.post("/vendor/login")
@@ -70,11 +72,12 @@ async def vendor_login(body: LoginRequest, response: Response):
 
     access_token = generate_access_token(str(vendor.id), UserType.VENDOR)
     refresh_token = generate_refresh_token(str(vendor.id), UserType.VENDOR)
-    _set_auth_cookies(response, access_token, refresh_token)
-    return api_response(200, "Login successful", data={
+    resp = api_response(200, "Login successful", data={
         "id": str(vendor.id), "name": vendor.name, "email": vendor.email, "type": UserType.VENDOR,
         "tokens": {"access_token": access_token, "refresh_token": refresh_token}
     })
+    _set_auth_cookies(resp, access_token, refresh_token)
+    return resp
 
 
 @router.post("/teacher/login")
@@ -87,11 +90,12 @@ async def teacher_login(body: LoginRequest, response: Response):
 
     access_token = generate_access_token(str(teacher.id), UserType.TEACHER)
     refresh_token = generate_refresh_token(str(teacher.id), UserType.TEACHER)
-    _set_auth_cookies(response, access_token, refresh_token)
-    return api_response(200, "Login successful", data={
+    resp = api_response(200, "Login successful", data={
         "id": str(teacher.id), "name": teacher.name, "email": teacher.email, "type": UserType.TEACHER,
         "tokens": {"access_token": access_token, "refresh_token": refresh_token}
     })
+    _set_auth_cookies(resp, access_token, refresh_token)
+    return resp
 
 
 @router.post("/student/login")
@@ -104,11 +108,12 @@ async def student_login(body: LoginRequest, response: Response):
 
     access_token = generate_access_token(str(student.id), UserType.STUDENT)
     refresh_token = generate_refresh_token(str(student.id), UserType.STUDENT)
-    _set_auth_cookies(response, access_token, refresh_token)
-    return api_response(200, "Login successful", data={
+    resp = api_response(200, "Login successful", data={
         "id": str(student.id), "name": student.name, "email": student.email, "type": UserType.STUDENT,
         "tokens": {"access_token": access_token, "refresh_token": refresh_token}
     })
+    _set_auth_cookies(resp, access_token, refresh_token)
+    return resp
 
 
 @router.post("/refresh")
@@ -123,8 +128,9 @@ async def refresh_token(request: Request, response: Response):
 
     access_token = generate_access_token(payload["id"], payload["type"])
     refresh_token_new = generate_refresh_token(payload["id"], payload["type"])
-    _set_auth_cookies(response, access_token, refresh_token_new)
-    return api_response(200, "Token refreshed", data={"id": payload["id"], "type": payload["type"]})
+    resp = api_response(200, "Token refreshed", data={"id": payload["id"], "type": payload["type"]})
+    _set_auth_cookies(resp, access_token, refresh_token_new)
+    return resp
 
 
 @router.post("/forgot-password")
@@ -198,11 +204,15 @@ async def verify_forgot_password(body: VerifyOtpRequest, response: Response):
     if not user_type:
         return api_response(404, "User not found", error="User not found")
 
+    if not user_id:
+        return api_response(404, "User not found", error="User not found")
+
     reset_tok = generate_reset_token(email, user_type, user_id)
-    response.set_cookie(
+    resp = api_response(200, "OTP verified", data={"verified": True, "reset_token": reset_tok})
+    resp.set_cookie(
         key="reset_token", value=reset_tok, httponly=True, samesite="none", secure=True, max_age=600
     )
-    return api_response(200, "OTP verified", data={"verified": True, "reset_token": reset_tok})
+    return resp
 
 
 @router.post("/reset-password")
@@ -253,7 +263,8 @@ async def reset_password(body: ResetPasswordRequest, request: Request, response:
     # Issue new auth tokens
     access_token = generate_access_token(user_id, user_type)
     refresh_token = generate_refresh_token(user_id, user_type)
-    _set_auth_cookies(response, access_token, refresh_token)
-    response.delete_cookie("reset_token")
+    resp = api_response(200, "Password reset successful", data={"id": user_id, "type": user_type})
+    _set_auth_cookies(resp, access_token, refresh_token)
+    resp.delete_cookie("reset_token")
 
-    return api_response(200, "Password reset successful", data={"id": user_id, "type": user_type})
+    return resp

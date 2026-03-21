@@ -1,10 +1,11 @@
 "use client";
 
 import { User } from "lucide-react";
-import { use, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ProblemSubmissionForm from "./ProblemSubmissionForm";
 import { getAllProblemCount } from "@/api/problems/get-problem-count";
 import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { useRole } from "@/component/general/useRole";
 import useLogs from "@/lib/useLogs";
 import useVendor from "@/store/vendorStore";
 import { useInstitution } from "@/store/institutionStore";
@@ -18,8 +19,6 @@ type ProblemCount = {
   totalQuestion: number;
 };
 
-const Colors = useColors();
-
 function DashboardHero() {
   const [showForm, setShowForm] = useState(false);
 
@@ -32,54 +31,53 @@ function DashboardHero() {
 
 export default DashboardHero;
 
-function HeroSection({ showForm, setShowForm }: any) {
+function HeroSection({
+  showForm,
+  setShowForm,
+}: {
+  showForm: boolean;
+  setShowForm: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  const Colors = useColors();
   const { loading: logsLoading, role: logRole } = useLogs();
+  const role = useRole();
 
   const { info: adminInfo } = useAdmin();
   const { info: vendorInfo } = useVendor();
   const { info: institutionInfo } = useInstitution();
   const { info: teacherInfo } = useTeacher();
 
-  const [admin_name, setName] = useState("");
-  const [admin_email, setEmail] = useState("");
   const [data, setData] = useState<ProblemCount | null>(null);
-  const [role, setRole] = useState("");
-  useEffect(() => {
-    setRole(localStorage.getItem("role") || "");
-    if (logsLoading || logRole === null) return;
 
-    let name = "";
-    let email = "";
+  const adminDetails = useMemo(() => {
+    if (logsLoading || logRole === null) {
+      return { name: "", email: "" };
+    }
 
     switch (logRole) {
       case 0:
       case 1:
-        if (!adminInfo) return;
-        name = adminInfo.data.name;
-        email = adminInfo.data.email;
-        break;
-
+        return adminInfo
+          ? { name: adminInfo.data.name, email: adminInfo.data.email }
+          : { name: "", email: "" };
       case 2:
-        if (!vendorInfo) return;
-        name = vendorInfo.data.name;
-        email = vendorInfo.data.email;
-        break;
-
+        return vendorInfo
+          ? { name: vendorInfo.data.name, email: vendorInfo.data.email }
+          : { name: "", email: "" };
       case 3:
-        if (!institutionInfo?.data) return;
-        name = institutionInfo.data.name;
-        email = institutionInfo.data.email;
-        break;
-
+        return institutionInfo?.data
+          ? {
+              name: institutionInfo.data.name,
+              email: institutionInfo.data.email,
+            }
+          : { name: "", email: "" };
       case 4:
-        if (!teacherInfo?.data) return;
-        name = teacherInfo.data.name;
-        email = teacherInfo.data.email;
-        break;
+        return teacherInfo?.data
+          ? { name: teacherInfo.data.name, email: teacherInfo.data.email }
+          : { name: "", email: "" };
+      default:
+        return { name: "", email: "" };
     }
-
-    setName(name);
-    setEmail(email);
   }, [
     logsLoading,
     logRole,
@@ -103,7 +101,9 @@ function HeroSection({ showForm, setShowForm }: any) {
       <div className="text-center md:text-left space-y-4">
         <h1 className="text-4xl font-semibold">
           <span className={`${Colors.text.special}`}>Greetings,</span>{" "}
-          <span className={`${Colors.text.primary}`}>{role}</span>
+          <span className={`${Colors.text.primary}`}>
+            {role ? role.charAt(0).toUpperCase() + role.slice(1) : "User"}
+          </span>
         </h1>
 
         <p className={`${Colors.text.primary} text-lg`}>
@@ -139,10 +139,10 @@ function HeroSection({ showForm, setShowForm }: any) {
 
         <div className={`${Colors.text.primary} text-center`}>
           <h2 className={` ${Colors.text.primary} text-xl font-medium`}>
-            {admin_name}
+            {adminDetails.name}
           </h2>
           <p className={`${Colors.text.secondary} text-sm opacity-90`}>
-            {admin_email}
+            {adminDetails.email}
           </p>
         </div>
 

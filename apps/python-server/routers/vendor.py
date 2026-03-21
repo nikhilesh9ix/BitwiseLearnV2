@@ -16,6 +16,7 @@ router = APIRouter(prefix="/api/v1/vendors", tags=["Vendors"])
 _create_roles = require_roles(UserType.SUPERADMIN, UserType.ADMIN)
 _read_roles = require_roles(UserType.SUPERADMIN, UserType.ADMIN, UserType.INSTITUTION)
 _delete_roles = require_roles(UserType.SUPERADMIN, UserType.ADMIN, UserType.INSTITUTION, UserType.VENDOR)
+_update_roles = require_roles(UserType.SUPERADMIN, UserType.ADMIN, UserType.VENDOR)
 
 
 @router.post("/create-vendor")
@@ -62,7 +63,10 @@ async def get_all_vendors(current_user: dict = Depends(_read_roles)):
 
 
 @router.get("/get-vendor-by-id/{id}")
-async def get_vendor_by_id(id: str, current_user: dict = Depends(get_current_user)):
+async def get_vendor_by_id(id: str, current_user: dict = Depends(_update_roles)):
+    if current_user["type"] == UserType.VENDOR and current_user["id"] != id:
+        return api_response(403, "Not authorized", error="Forbidden")
+
     vendor = await Vendor.get(PydanticObjectId(id))
     if not vendor:
         return api_response(404, "Vendor not found", error="Not found")
@@ -76,7 +80,10 @@ async def get_vendor_by_id(id: str, current_user: dict = Depends(get_current_use
 
 
 @router.put("/update-vendor-by-id/{id}")
-async def update_vendor(id: str, body: UpdateVendorRequest, current_user: dict = Depends(get_current_user)):
+async def update_vendor(id: str, body: UpdateVendorRequest, current_user: dict = Depends(_update_roles)):
+    if current_user["type"] == UserType.VENDOR and current_user["id"] != id:
+        return api_response(403, "Not authorized", error="Forbidden")
+
     vendor = await Vendor.get(PydanticObjectId(id))
     if not vendor:
         return api_response(404, "Vendor not found", error="Not found")

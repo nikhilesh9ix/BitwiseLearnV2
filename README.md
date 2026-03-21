@@ -76,6 +76,12 @@ BitwiseV2/
 └── ARCHITECTURE.md              # Monolith vs microservices comparison
 ```
 
+## Architecture Policy
+
+- `apps/python-server/` is the canonical implementation for feature work and local debugging.
+- The shared package and `apps/*-service/` folders must preserve the same contracts as the monolith path.
+- Changes to auth, models, schemas, or cross-cutting behavior should be made against the monolith first, then aligned in the shared/microservice path before shipping Docker or gateway-based deployments.
+
 ## Prerequisites
 
 - Python 3.11+

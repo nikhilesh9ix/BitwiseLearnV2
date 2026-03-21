@@ -1,5 +1,11 @@
 # Monolith vs Microservices — BitwiseLearn Architecture Comparison
 
+## Current Team Rule
+
+- `apps/python-server/` is the source of truth for day-to-day development.
+- The microservice layout exists for deployment topology and service-boundary experimentation, but it should preserve the monolith's request/response behavior.
+- Any change that touches auth, models, schemas, or shared utilities should be validated in both paths before release.
+
 ## Monolith (`apps/python-server/`)
 
 ### Pros

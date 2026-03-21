@@ -329,6 +329,10 @@ async def submit_assessment_question(id: str, body: SubmitAssessmentQuestionRequ
     if not question:
         return api_response(404, "Question not found", error="Not found")
 
+    section = await AssessmentSection.get(question.section_id)
+    if not section or str(section.assessment_id) != str(assessment.id):
+        return api_response(400, "Question does not belong to this assessment", error="Invalid assessment question")
+
     # Ensure submission record exists
     submission = await AssessmentSubmission.find_one(
         AssessmentSubmission.assessment_id == assessment.id,
@@ -345,7 +349,6 @@ async def submit_assessment_question(id: str, body: SubmitAssessmentQuestionRequ
     marks = 0
     answer_str = body.answer
 
-    section = await AssessmentSection.get(question.section_id)
     if section and section.assessment_type == AssessmentType.NO_CODE:
         # MCQ auto-grade
         if body.answer and question.correct_option and body.answer == question.correct_option:

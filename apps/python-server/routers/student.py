@@ -5,10 +5,11 @@ from beanie import PydanticObjectId
 from schemas.student import CreateStudentRequest, UpdateStudentRequest
 from utils.api_response import api_response
 from utils.password import hash_password
-from middleware.auth import get_current_user, not_student
+from middleware.auth import get_current_user, not_student, require_roles
 from models.student import Student
 from models.institution import Institution
 from models.batch import Batch
+from models.teacher import Teacher
 from models.course_enrollment import CourseEnrollment
 from models.course import Course
 from models.assessment import Assessment
@@ -16,6 +17,7 @@ from enums import UserType
 from services.email import send_welcome_email
 
 router = APIRouter(prefix="/api/v1/students", tags=["Students"])
+_student_manage_roles = require_roles(UserType.SUPERADMIN, UserType.ADMIN, UserType.INSTITUTION, UserType.VENDOR)
 
 
 @router.post("/create-student")
@@ -78,6 +80,23 @@ async def get_student_by_id(id: str, current_user: dict = Depends(get_current_us
     student = await Student.get(PydanticObjectId(id))
     if not student:
         return api_response(404, "Student not found", error="Not found")
+
+    if current_user["type"] == UserType.STUDENT and str(student.id) != current_user["id"]:
+        return api_response(403, "Not authorized", error="Forbidden")
+
+    if current_user["type"] == UserType.INSTITUTION and str(student.institute_id) != current_user["id"]:
+        return api_response(403, "Not authorized", error="Forbidden")
+
+    if current_user["type"] == UserType.VENDOR:
+        inst = await Institution.get(student.institute_id)
+        if not inst or str(inst.created_by_vendor_id) != current_user["id"]:
+            return api_response(403, "Not authorized", error="Forbidden")
+
+    if current_user["type"] == UserType.TEACHER:
+        teacher = await Teacher.get(PydanticObjectId(current_user["id"]))
+        if not teacher or str(teacher.batch_id) != str(student.batch_id):
+            return api_response(403, "Not authorized", error="Forbidden")
+
     return api_response(200, "Student fetched", data={
         "id": str(student.id), "name": student.name, "email": student.email,
         "roll_number": student.roll_number, "batch_id": str(student.batch_id),
@@ -89,6 +108,28 @@ async def get_student_by_id(id: str, current_user: dict = Depends(get_current_us
 
 @router.get("/get-student-by-batch/{id}")
 async def get_students_by_batch(id: str, current_user: dict = Depends(get_current_user)):
+    batch = await Batch.get(PydanticObjectId(id))
+    if not batch:
+        return api_response(404, "Batch not found", error="Not found")
+
+    if current_user["type"] == UserType.STUDENT:
+        me = await Student.get(PydanticObjectId(current_user["id"]))
+        if not me or str(me.batch_id) != id:
+            return api_response(403, "Not authorized", error="Forbidden")
+
+    if current_user["type"] == UserType.TEACHER:
+        teacher = await Teacher.get(PydanticObjectId(current_user["id"]))
+        if not teacher or str(teacher.batch_id) != id:
+            return api_response(403, "Not authorized", error="Forbidden")
+
+    if current_user["type"] == UserType.INSTITUTION and str(batch.institution_id) != current_user["id"]:
+        return api_response(403, "Not authorized", error="Forbidden")
+
+    if current_user["type"] == UserType.VENDOR:
+        inst = await Institution.get(batch.institution_id)
+        if not inst or str(inst.created_by_vendor_id) != current_user["id"]:
+            return api_response(403, "Not authorized", error="Forbidden")
+
     students = await Student.find(Student.batch_id == PydanticObjectId(id)).to_list()
     data = [{
         "id": str(s.id), "name": s.name, "email": s.email,
@@ -112,7 +153,7 @@ async def update_student(id: str, body: UpdateStudentRequest, current_user: dict
 
 
 @router.delete("/delete-student-by-id/{id}")
-async def delete_student(id: str, current_user: dict = Depends(not_student)):
+async def delete_student(id: str, current_user: dict = Depends(_student_manage_roles)):
     student = await Student.get(PydanticObjectId(id))
     if not student:
         return api_response(404, "Student not found", error="Not found")

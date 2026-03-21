@@ -96,6 +96,11 @@ async def proxy(request: Request, path: str):
         media_type=resp.headers.get("content-type"),
     )
     for key, value in resp.headers.items():
-        if key.lower() not in ("content-encoding", "content-length", "transfer-encoding"):
+        key_lower = key.lower()
+        if key_lower in ("content-encoding", "content-length", "transfer-encoding", "set-cookie"):
+            continue
+        if key_lower not in ("content-encoding", "content-length", "transfer-encoding"):
             response.headers[key] = value
+    for cookie in resp.headers.get_list("set-cookie"):
+        response.headers.append("set-cookie", cookie)
     return response

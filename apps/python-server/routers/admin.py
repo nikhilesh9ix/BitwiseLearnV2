@@ -5,7 +5,7 @@ from beanie import PydanticObjectId
 from schemas.user import CreateAdminRequest, UpdateAdminRequest
 from utils.api_response import api_response
 from utils.password import hash_password
-from middleware.auth import get_current_user, superadmin_only
+from middleware.auth import get_current_user, superadmin_only, admin_only
 from models.user import User
 from models.institution import Institution
 from models.vendor import Vendor
@@ -89,7 +89,7 @@ async def delete_admin(id: str, current_user: dict = Depends(superadmin_only)):
 
 
 @router.get("/db-info")
-async def db_info(current_user: dict = Depends(get_current_user)):
+async def db_info(current_user: dict = Depends(admin_only)):
     institutions = await Institution.find_all().to_list()
     inst_data = []
     for inst in institutions:
@@ -122,7 +122,7 @@ async def db_info(current_user: dict = Depends(get_current_user)):
 
 
 @router.get("/dashboard")
-async def admin_dashboard(current_user: dict = Depends(get_current_user)):
+async def admin_dashboard(current_user: dict = Depends(admin_only)):
     data = {
         "institutions": await Institution.find_all().count(),
         "vendors": await Vendor.find_all().count(),
