@@ -3,9 +3,9 @@ import toast from "react-hot-toast";
 
 export const markAsDone = async (id: string) => {
   try {
-    const res = await axiosInstance.post("/api/course/change-status/" + id, {
-      currentStatus: "DONE",
-    });
+    const res = await axiosInstance.post(
+      `/api/v1/courses/mark-content-as-done/${id}`,
+    );
 
     return res.data;
   } catch (error) {
@@ -14,9 +14,9 @@ export const markAsDone = async (id: string) => {
 };
 export const markAsUnDone = async (id: string) => {
   try {
-    const res = await axiosInstance.post("/api/course/change-status/" + id, {
-      currentStatus: "UN_DONE",
-    });
+    const res = await axiosInstance.post(
+      `/api/v1/courses/unmark-content-as-done/${id}`,
+    );
 
     return res.data;
   } catch (error) {

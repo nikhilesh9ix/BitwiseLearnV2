@@ -1,4 +1,5 @@
 import httpx
+from json import JSONDecodeError
 from shared.config import get_settings
 from shared.enums import Languages
 
@@ -14,7 +15,25 @@ LANGUAGE_MAP = {
 
 
 async def execute_code(language: str, code: str, stdin: str = "") -> dict:
-    lang_info = LANGUAGE_MAP.get(language)
+    normalized_language = (language or "").strip().upper()
+    aliases = {
+        "PY": "PYTHON",
+        "JS": "JAVASCRIPT",
+        "NODE": "JAVASCRIPT",
+        "C++": "CPP",
+        "CXX": "CPP",
+    }
+    normalized_language = aliases.get(normalized_language, normalized_language)
+
+    try:
+        language_enum = Languages(normalized_language)
+    except ValueError:
+        language_enum = None
+
+    if language_enum is None:
+        return {"error": f"Unsupported language: {language}"}
+
+    lang_info = LANGUAGE_MAP.get(language_enum)
     if not lang_info:
         return {"error": f"Unsupported language: {language}"}
 
@@ -32,8 +51,24 @@ async def execute_code(language: str, code: str, stdin: str = "") -> dict:
     }
 
     async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post(
-            f"{settings.CODE_EXECUTION_SERVER}api/v2/execute",
-            json=payload,
-        )
-        return resp.json()
+        try:
+            resp = await client.post(
+                f"{settings.CODE_EXECUTION_SERVER}api/v2/execute",
+                json=payload,
+            )
+        except httpx.HTTPError as exc:
+            return {"error": f"Execution server request failed: {exc}"}
+
+        if resp.status_code >= 400:
+            return {
+                "error": f"Execution server returned HTTP {resp.status_code}",
+                "details": resp.text[:500],
+            }
+
+        try:
+            return resp.json()
+        except JSONDecodeError:
+            return {
+                "error": "Execution server returned invalid response format",
+                "details": resp.text[:500],
+            }

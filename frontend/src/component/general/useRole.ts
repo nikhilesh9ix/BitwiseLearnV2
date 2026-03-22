@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type Role =
   | "STUDENT"
@@ -43,7 +43,11 @@ function getStoredRole(): Role {
 }
 
 export function useRole() {
-  const [role] = useState<Role>(() => getStoredRole());
+  const [role, setRole] = useState<Role>(null);
+
+  useEffect(() => {
+    setRole(getStoredRole());
+  }, []);
 
   return role?.toLowerCase() || null;
 }

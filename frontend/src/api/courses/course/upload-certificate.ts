@@ -11,7 +11,7 @@ export const uploadCertificate = async (
     formData.append("certificate", file);
 
     const res = await axiosInstance.post(
-      `/api/course/upload-certificate/${courseId}`,
+      `/api/v1/courses/upload-completion-certificate/${courseId}`,
       formData,
     );
 

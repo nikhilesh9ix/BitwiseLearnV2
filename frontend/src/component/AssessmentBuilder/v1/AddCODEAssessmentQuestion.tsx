@@ -51,7 +51,7 @@ const AddAssessmentCode = ({
       setSubmitting(true);
 
       await createQuestion(sectionId, {
-        problem: selectedQuestion.id,
+        problemId: selectedQuestion.id,
         maxMarks,
       });
 

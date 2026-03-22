@@ -27,7 +27,12 @@ export const createVendors = async (payload: CreateVendor) => {
     );
 
     return response.data.data;
-  } catch (error) {
-    toast.error("failed to create vendors");
+  } catch (error: any) {
+    toast.error(
+      error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "failed to create vendor",
+    );
+    throw error;
   }
 };

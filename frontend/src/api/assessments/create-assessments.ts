@@ -27,12 +27,17 @@ export const createAssessments = async (payload: CreateAssessment) => {
     };
 
     const response = await axiosInstance.post(
-      "/api/assessments/create-assessment",
+      "/api/v1/assessments/create-assessment",
       requestBody,
     );
 
     return response.data.data;
-  } catch (error) {
-    toast.error("error creating assessments");
+  } catch (error: any) {
+    toast.error(
+      error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "error creating assessments",
+    );
+    throw error;
   }
 };

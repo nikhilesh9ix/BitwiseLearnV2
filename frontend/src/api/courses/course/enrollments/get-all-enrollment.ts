@@ -5,7 +5,9 @@ export async function getCourseEnrollments(
   courseInfo: any,
   stateFn: any,
 ) {
-  const data = await axiosInstance.get("/api/course/enrollments/" + id);
+  const data = await axiosInstance.get(
+    "/api/v1/courses/get-course-enrollments/" + id,
+  );
   // console.log(data);
   courseInfo(data.data.course);
   stateFn(data.data.data);

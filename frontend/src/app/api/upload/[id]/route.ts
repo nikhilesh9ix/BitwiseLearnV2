@@ -13,25 +13,34 @@ export async function POST(
   try {
     const { id } = await context.params;
 
-    const token = req.cookies.get("token") || "";
-    if (!token) throw new Error("Token not found");
-    const cookieHeader = req.headers.get("cookie");
     const formData = await req.formData();
-    console.log("route hit");
+    const uploadType = String(formData.get("type") || "");
+    const mappedPath = URL_MAP[uploadType];
+    if (!mappedPath) {
+      return NextResponse.json(
+        { message: `Unsupported upload type: ${uploadType}` },
+        { status: 400 },
+      );
+    }
+
+    const cookieHeader = req.headers.get("cookie");
+    const authHeader = req.headers.get("authorization");
+
     const res = await fetch(
-      `${process.env.BACKEND_URL}/api/v1/bulk-upload/${URL_MAP[formData.get("type") as string]}/${id}`,
+      `${process.env.BACKEND_URL}/api/v1/bulk-upload/${mappedPath}/${id}`,
       {
         method: "POST",
         headers: {
-          Cookie: cookieHeader || "",
+          ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+          ...(authHeader ? { Authorization: authHeader } : {}),
         },
         credentials: "include",
         body: formData,
       },
     );
-    console.log("output recived");
+
     const data = await res.json();
-    return NextResponse.json(data);
+    return NextResponse.json(data, { status: res.status });
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }

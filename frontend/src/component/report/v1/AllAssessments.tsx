@@ -43,7 +43,7 @@ function AllAssessments() {
     async function handleLoad() {
       setLoading(true);
       const data = await getAllAssessments();
-      setAssessments(data.data);
+      setAssessments(data || []);
       setLoading(false);
     }
     handleLoad();

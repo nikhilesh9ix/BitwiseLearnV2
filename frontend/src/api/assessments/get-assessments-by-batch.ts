@@ -4,9 +4,9 @@ import toast from "react-hot-toast";
 export const getAssessmentsByBatch = async (statefn: any, paramId: string) => {
   try {
     const getAssessments = await axiosInstance.get(
-      "/api/assessments/get-by-batch/" + paramId,
+      "/api/v1/assessments/get-assessment-by-batch/" + paramId,
     );
-    statefn(getAssessments.data);
+    statefn(getAssessments.data?.data || []);
   } catch (error) {
     toast.error("error getting assessments");
   }
@@ -16,7 +16,7 @@ export const getAssessmentsByInstitution = async (
   paramId: string,
 ) => {
   const getAssessments = await axiosInstance.get(
-    "/api/assessments/get-by-institution/" + paramId,
+    "/api/v1/assessments/get-assessment-by-institution/" + paramId,
   );
-  statefn(getAssessments.data);
+  statefn(getAssessments.data?.data || []);
 };

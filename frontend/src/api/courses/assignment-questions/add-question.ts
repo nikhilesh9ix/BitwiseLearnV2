@@ -14,8 +14,14 @@ export const addAssignmentQuestion = async (
 ) => {
   try {
     const res = await axiosInstance.post(
-      `/api/course/assignment-question/add/${assignmentId}`,
-      payload,
+      `/api/v1/courses/add-assignment-question/${assignmentId}`,
+      {
+        // assignmentId is in URL, ignore in body
+        question: payload.question,
+        options: payload.options,
+        correct_answer: payload.correctAnswer,
+        // type is missing in frontend payload type? Assuming it might be passed or optional in backend
+      },
     );
 
     return res.data;

@@ -6,12 +6,16 @@ export const getAssessmentSections = async (assessmentId: string) => {
     if (!assessmentId) return [];
 
     const res = await axiosInstance.get(
-      `/api/assessments/get-all-sections/${assessmentId}`,
+      `/api/v1/assessments/get-sections-for-assessment/${assessmentId}`,
     );
 
     return res.data?.data ?? [];
-  } catch (error) {
-    toast.error("error creating section");
+  } catch (error: any) {
+    toast.error(
+      error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "error getting sections",
+    );
     return [];
   }
 };

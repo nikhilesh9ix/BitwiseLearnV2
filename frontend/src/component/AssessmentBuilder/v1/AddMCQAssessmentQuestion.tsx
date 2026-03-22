@@ -73,6 +73,10 @@ const AddAssessmentMCQ = ({
         maxMarks,
       });
 
+      if (!created?.id) {
+        throw new Error("Invalid question response");
+      }
+
       toast.success("Question added");
       onCreated(created); // ✅ NOW VALID
 

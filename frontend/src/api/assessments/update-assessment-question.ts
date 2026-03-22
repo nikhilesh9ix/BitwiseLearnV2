@@ -14,12 +14,18 @@ export const updateAssessmentQuestion = async (
 ) => {
   try {
     const res = await axiosInstance.put(
-      `/api/assessments/update-assessment-question/${questionId}`,
+      `/api/v1/assessments/update-assessment-question/${questionId}`,
       data,
     );
 
     return res.data.data;
-  } catch (error) {
-    toast.error("error updating question");
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      "Error updating question";
+    toast.error(message);
+    throw error;
   }
 };

@@ -11,12 +11,13 @@ export type createBatch = {
 export const createBatch = async (payload: createBatch) => {
   try {
     const response = await axiosInstance.post(
-      "/api/batch/create-batch",
+      "/api/v1/batches/create-batch",
       payload,
     );
 
     return response.data?.data;
   } catch (error) {
     toast.error("failed to create batch");
+    throw error;
   }
 };

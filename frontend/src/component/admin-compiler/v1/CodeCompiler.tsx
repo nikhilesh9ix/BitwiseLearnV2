@@ -116,24 +116,27 @@ function CodeCompiler() {
     setOutput("Running...");
 
     try {
-      const res = await axiosInstance.post("/api/compile", {
+      const res = await axiosInstance.post("/api/v1/code/compile", {
         code,
         language: language === "cpp" ? "c++" : language,
-        input,
+        stdin: input,
       });
 
-      const data = res.data.run;
+      const data = res.data || {};
       if (data.signal === "SIGKILL") {
-        if (data.output === "Sandbox keeper received fatal signal 6\n") {
-          setOutput("Infinite Loop in program");
-        } else {
-          setOutput(data.message);
-        }
+        setOutput("Execution timed out or was terminated.");
+      } else if (data.stderr) {
+        setOutput(data.stderr);
       } else {
-        setOutput(data.output || data.error);
+        setOutput(data.stdout || "No output");
       }
-    } catch (err) {
-      setOutput("Execution failed.");
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Execution failed.";
+      setOutput(message);
     } finally {
       setLoading(false);
       resetTimer();

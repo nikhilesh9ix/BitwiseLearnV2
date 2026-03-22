@@ -2,6 +2,14 @@
 One-time script to seed a SUPERADMIN user into MongoDB.
 Run from the project root:
     python seed_superadmin.py
+
+Required environment variables:
+    DATABASE_URL
+    SUPERADMIN_EMAIL
+    SUPERADMIN_PASSWORD
+
+Optional environment variables:
+    SUPERADMIN_NAME (default: Super Admin)
 """
 import asyncio
 import os
@@ -15,16 +23,32 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from shared.utils.password import hash_password
 from shared.enums import UserType
 
-DATABASE_URL = "mongodb+srv://bitwiselearn20:superadmin@cluster0.rvgyzhr.mongodb.net/bitwiselearn?retryWrites=true&w=majority&appName=Cluster0"
+DATABASE_URL = os.getenv("DATABASE_URL")
+SUPERADMIN_EMAIL = os.getenv("SUPERADMIN_EMAIL")
+SUPERADMIN_PASSWORD = os.getenv("SUPERADMIN_PASSWORD")
+SUPERADMIN_NAME = os.getenv("SUPERADMIN_NAME", "Super Admin")
 
-# ── Change these before running ──────────────────────────────────────────────
-SUPERADMIN_EMAIL    = "admin@bitwiselearn.com"
-SUPERADMIN_PASSWORD = "Admin@1234"
-SUPERADMIN_NAME     = "Super Admin"
-# ─────────────────────────────────────────────────────────────────────────────
+
+def _require_env() -> None:
+    missing = [
+        name
+        for name, value in {
+            "DATABASE_URL": DATABASE_URL,
+            "SUPERADMIN_EMAIL": SUPERADMIN_EMAIL,
+            "SUPERADMIN_PASSWORD": SUPERADMIN_PASSWORD,
+        }.items()
+        if not value
+    ]
+
+    if missing:
+        raise RuntimeError(
+            f"Missing required environment variable(s): {', '.join(missing)}"
+        )
 
 
 async def seed():
+    _require_env()
+
     client = AsyncIOMotorClient(DATABASE_URL, tlsCAFile=certifi.where())
     db_name = DATABASE_URL.rsplit("/", 1)[-1].split("?")[0] or "bitwiselearn"
     db = client[db_name]

@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 export const createProblemTemplate = async (problemId: string, data: any) => {
   try {
     const response = await axiosInstance.post(
-      "/api/admin/create-template/" + problemId,
+      "/api/v1/problems/add-template-to-problem/" + problemId,
       data,
     );
 

@@ -2,7 +2,7 @@ import axiosInstance from "@/lib/axios";
 
 export const getSections = async (courseId: string) => {
   const res = await axiosInstance.get(
-    `/api/course/get-section-by-courseId/${courseId}`,
+    `/api/v1/courses/get-all-sections-by-course/${courseId}`,
   );
 
   return res.data;

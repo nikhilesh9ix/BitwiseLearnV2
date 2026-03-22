@@ -9,7 +9,7 @@ export const getAssignmentById = async (
     if (!assignmentId) throw new Error("Assignment ID is required");
 
     const res = await axiosInstance.get(
-      `/api/course/assignment/get/${assignmentId}`,
+      `/api/v1/courses/get-assignment-by-id/${assignmentId}`,
     );
 
     if (stateFn) {

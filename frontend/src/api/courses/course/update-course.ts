@@ -12,7 +12,7 @@ export const updateCourse = async (
 ) => {
   try {
     const res = await axiosInstance.put(
-      `/api/course/update-course/${courseId}`,
+      `/api/v1/courses/update-course/${courseId}`,
       payload,
     );
 

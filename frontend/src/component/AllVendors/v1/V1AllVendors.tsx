@@ -18,13 +18,19 @@ function V1AllVendors() {
     getAllVendors(setData);
   }, []);
   const handleCreateVendor = async (data: any) => {
+    const toastId = toast.loading("Creating Vendor...");
     try {
       await createVendors(data);
       setAddNew(false);
-      toast.success("Vendor Created Successfully");
-      getAllVendors(setData);
-    } catch (err) {
-      toast.error("Error creating Vendor");
+      toast.success("Vendor Created Successfully", { id: toastId });
+      await getAllVendors(setData);
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.error ||
+          err?.response?.data?.message ||
+          "Error creating Vendor",
+        { id: toastId },
+      );
       // console.error(err);
     }
   };

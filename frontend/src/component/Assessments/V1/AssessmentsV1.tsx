@@ -591,8 +591,7 @@ const AssessmentsV1 = () => {
       let res: any;
       if (logsRole != null && logsRole < 3) {
         res = await getAllAssessments();
-        console.log(res.data);
-        setAssessments(res.data || []);
+        setAssessments(res || []);
       } else {
         res = await getAssessmentsByInstitution((data: any) => {
           //@ts-ignore

@@ -17,7 +17,7 @@ export const createTeacher = async (
 ) => {
   try {
     const response = await axiosInstance.post(
-      "/api/teacher/create-teacher",
+      "/api/v1/teachers/create-teacher",
       data,
     );
 
@@ -27,5 +27,6 @@ export const createTeacher = async (
     onError?.(error);
 
     toast.error("failed to create teacher");
+    throw error;
   }
 };

@@ -12,14 +12,19 @@ export const createCourse = async (
   stateFn?: any,
 ) => {
   try {
-    const res = await axiosInstance.post("/api/course/create-course", payload);
+    const res = await axiosInstance.post("/api/v1/courses/create-course", payload);
 
     if (stateFn) {
-      stateFn(res.data);
+      stateFn(res.data?.data);
     }
 
-    return res.data;
-  } catch (error) {
-    toast.error("failed to get create course");
+    return res.data?.data;
+  } catch (error: any) {
+    toast.error(
+      error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "failed to create course",
+    );
+    throw error;
   }
 };

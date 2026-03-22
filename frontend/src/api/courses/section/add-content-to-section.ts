@@ -6,11 +6,11 @@ export const addContentToSection = async (
   description: string,
 ) => {
   const res = await axiosInstance.post(
-    `/api/course/add-content-by-sectionId/${sectionId}`,
+    `/api/v1/courses/add-content-to-section`,
     {
       name,
       description,
-      sectionId,
+      section_id: sectionId,
     },
   );
 

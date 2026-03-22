@@ -4,11 +4,17 @@ import toast from "react-hot-toast";
 export const deleteAssessmentQuestion = async (questionId: string) => {
   try {
     const res = await axiosInstance.delete(
-      `/api/assessments/delete-assessment-question/${questionId}`,
+      `/api/v1/assessments/delete-assessment-question/${questionId}`,
     );
 
     return res.data.data;
-  } catch (error) {
-    toast.error("error deleting question");
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      "Error deleting question";
+    toast.error(message);
+    throw error;
   }
 };

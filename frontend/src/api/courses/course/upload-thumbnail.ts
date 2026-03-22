@@ -11,7 +11,7 @@ export const uploadThumbnail = async (
     formData.append("thumbnail", file);
 
     const res = await axiosInstance.post(
-      `/api/course/upload-thumbnail/${courseId}`,
+      `/api/v1/courses/upload-thumbnail/${courseId}`,
       formData,
     );
 

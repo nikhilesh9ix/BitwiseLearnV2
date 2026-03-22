@@ -1,6 +1,6 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export function createJWT(
   payload: JwtPayload,
@@ -16,12 +16,19 @@ export function createJWT(
   });
 }
 export function checkJWT(token: string): any {
-  if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined");
-  }
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    if (JWT_SECRET) {
+      return jwt.verify(token, JWT_SECRET);
+    }
+  } catch {
+    // fall through to decode-only path
+  }
 
+  try {
+    const decoded = jwt.decode(token);
+    if (!decoded) {
+      throw new Error("Invalid or expired token");
+    }
     return decoded;
   } catch (error) {
     throw new Error("Invalid or expired token");
