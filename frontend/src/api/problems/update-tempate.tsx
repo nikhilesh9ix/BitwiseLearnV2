@@ -7,8 +7,8 @@ export const updateProblemTemplate = async (
   templateMap: any,
 ) => {
   try {
-    const res = await axiosInstance.post(
-      "/api/admin/update-template/" + id,
+    const res = await axiosInstance.patch(
+      "/api/v1/problems/update-template-to-problem/" + id,
       data,
     );
     templateMap[data.currentLanguage] = res.data;

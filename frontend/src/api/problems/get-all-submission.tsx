@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 export const getAllProblemSubmission = async (statefn: any, id: string) => {
   try {
     const getProblem = await axiosInstance.get(
-      "/api/get-problem/submission/" + id,
+      "/api/v1/problems/get-submission/" + id,
     );
     statefn(getProblem.data);
   } catch (error) {

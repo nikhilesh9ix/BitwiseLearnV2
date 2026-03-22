@@ -3,10 +3,10 @@ import toast from "react-hot-toast";
 
 export const getTeacherByInstitute = async (statefn: any, paramId: string) => {
   try {
-    const getStudents = await axiosInstance.get(
-      "/api/teacher/get-by-institute/" + paramId,
+    const response = await axiosInstance.get(
+      "/api/v1/teachers/get-teacher-by-institute/" + paramId,
     );
-    statefn(getStudents.data);
+    statefn(response.data?.data || []);
   } catch (error) {
     toast.error("failed to get teacher by institution");
   }

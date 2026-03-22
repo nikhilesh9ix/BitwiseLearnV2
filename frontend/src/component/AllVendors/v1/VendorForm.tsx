@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useState } from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 import { useColors } from "@/component/general/(Color Manager)/useColors";
 
@@ -20,9 +20,9 @@ type VendorFormData = {
 };
 
 const TOTAL_STEPS = 2;
-const Colors = useColors();
 
 export default function VendorForm({ openForm, onSubmit }: Props) {
+  const Colors = useColors();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<VendorFormData>({
     name: "",
@@ -81,18 +81,21 @@ export default function VendorForm({ openForm, onSubmit }: Props) {
           {step === 1 && (
             <>
               <Input
+                Colors={Colors}
                 label="Vendor Name"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
               />
               <Input
+                Colors={Colors}
                 label="Tagline"
                 name="tagline"
                 value={formData.tagline}
                 onChange={handleChange}
               />
               <Input
+                Colors={Colors}
                 label="Website Link"
                 name="websiteLink"
                 value={formData.websiteLink}
@@ -105,6 +108,7 @@ export default function VendorForm({ openForm, onSubmit }: Props) {
           {step === 2 && (
             <>
               <Input
+                Colors={Colors}
                 label="Primary Email"
                 name="email"
                 type="email"
@@ -112,6 +116,7 @@ export default function VendorForm({ openForm, onSubmit }: Props) {
                 onChange={handleChange}
               />
               <Input
+                Colors={Colors}
                 label="Secondary Email"
                 name="secondaryEmail"
                 type="email"
@@ -119,12 +124,14 @@ export default function VendorForm({ openForm, onSubmit }: Props) {
                 onChange={handleChange}
               />
               <Input
+                Colors={Colors}
                 label="Phone Number"
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
               />
               <Input
+                Colors={Colors}
                 label="Secondary Phone"
                 name="secondaryPhoneNumber"
                 value={formData.secondaryPhoneNumber}
@@ -177,7 +184,13 @@ export default function VendorForm({ openForm, onSubmit }: Props) {
 
 /* ---------- UI Primitives ---------- */
 
-function Label({ children }: { children: React.ReactNode }) {
+function Label({
+  children,
+  Colors,
+}: {
+  children: React.ReactNode;
+  Colors: ReturnType<typeof useColors>;
+}) {
   return (
     <label className={`text-[11px] uppercase tracking-wide ${Colors.text.special}`}>
       {children}
@@ -187,11 +200,15 @@ function Label({ children }: { children: React.ReactNode }) {
 
 function Input({
   label,
+  Colors,
   ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+}: React.InputHTMLAttributes<HTMLInputElement> & {
+  label: string;
+  Colors: ReturnType<typeof useColors>;
+}) {
   return (
     <div>
-      <Label>{label}</Label>
+      <Label Colors={Colors}>{label}</Label>
       <input
         {...props}
         className={`mt-1 w-full rounded-lg border ${Colors.border.defaultThin} ${Colors.background.primary} px-3 py-2 text-sm ${Colors.text.primary} focus:ring-2 focus:ring-primaryBlue`}

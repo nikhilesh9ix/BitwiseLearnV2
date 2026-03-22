@@ -6,7 +6,7 @@ export async function searchProblem(query: string) {
     if (query.trim().length === 0) {
       toast.error("search cannot be empty");
     }
-    const data = await axiosInstance.post("/api/admin/search-problem", {
+    const data = await axiosInstance.post("/api/v1/problems/search-question", {
       query,
     });
 

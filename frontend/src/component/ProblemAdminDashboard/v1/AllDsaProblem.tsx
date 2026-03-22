@@ -60,7 +60,7 @@ function AllDsaProblem() {
         {filteredQuestions.map((question, index) => (
           <QuestionCard
             key={question.id ?? index}
-            topics={question.problemTopics}
+            topics={question.problemTopics ?? question.tags ?? []}
             id={question.id}
             name={question.name}
             difficulty={question.difficulty}

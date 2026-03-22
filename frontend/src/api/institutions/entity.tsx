@@ -48,11 +48,13 @@ export const updateEntity = async (id: string, data: any, stateFn: any) => {
       data.data,
     );
     toast.success("Saved Changes...", { id: toastId });
-    if (stateFn) {
+    if (typeof stateFn === "function") {
       stateFn(updatedData.data);
     }
+    return updatedData.data;
   } catch (error) {
     toast.error("Unable to update", { id: toastId });
+    throw error;
   }
 };
 export const deleteEntity = async (id: string, data: any, stateFn: any) => {
@@ -62,8 +64,13 @@ export const deleteEntity = async (id: string, data: any, stateFn: any) => {
       getUrl(id, data.entity, "delete"),
     );
     toast.success("Deleted Entity...", { id: toastId });
-    stateFn(deleteData.data);
+    if (typeof stateFn === "function") {
+      stateFn(deleteData.data);
+    }
+    return deleteData.data;
   } catch (error) {
     console.error("Delete failed:", error);
+    toast.error("Unable to delete", { id: toastId });
+    throw error;
   }
 };

@@ -16,8 +16,13 @@ export const updateAssignmentQuestion = async (
     if (!questionId) throw new Error("Question ID is required");
 
     const res = await axiosInstance.put(
-      `/api/course/assignment-question/update/${questionId}`,
-      payload,
+      `/api/v1/courses/update-assignment-question/${questionId}`,
+      {
+        question: payload.question,
+        options: payload.options,
+        correct_answer: payload.correctAnswer,
+        type: payload.type,
+      },
     );
 
     return res.data;

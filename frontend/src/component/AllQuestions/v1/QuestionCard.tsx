@@ -15,13 +15,18 @@ function QuestionCard({
 }: {
   id: string;
   name: string;
-  topics: any[]; // array of topic objects
+  topics?: any[];
   difficulty: Difficulty;
   solved: boolean;
   isAdmin: boolean;
 }) {
-  // Flatten all tagNames into a single array
-  const topicNames: string[] = topics.flatMap((topic) => topic.tagName || []);
+  const normalizedTopics = Array.isArray(topics) ? topics : [];
+  const topicNames: string[] = normalizedTopics.flatMap((topic) => {
+    if (typeof topic === "string") return [topic];
+    if (Array.isArray(topic?.tagName)) return topic.tagName;
+    if (typeof topic?.tagName === "string") return [topic.tagName];
+    return [];
+  });
   const Colors = useColors();
 
   return (

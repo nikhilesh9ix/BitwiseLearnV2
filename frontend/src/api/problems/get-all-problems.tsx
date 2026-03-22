@@ -6,11 +6,14 @@ export const getAllProblemData = async (
   admin: boolean = false,
 ) => {
   try {
-    const getProblem = await axiosInstance.get(
-      "/api/get-problem" + (admin ? "?q=valid" : ""),
-    );
-    statefn(getProblem.data);
-  } catch (error) {
+    const endpoint = admin
+      ? "/api/v1/problems/get-all-dsa-problem/"
+      : "/api/v1/problems/get-all-listed-problem/";
+    const getProblem = await axiosInstance.get(endpoint);
+    statefn(getProblem.data?.data || []);
+  } catch (error: any) {
     toast.error("failed to get problem");
+    statefn([]);
+    throw error;
   }
 };

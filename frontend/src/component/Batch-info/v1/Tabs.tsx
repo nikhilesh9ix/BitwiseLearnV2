@@ -4,15 +4,13 @@ import CourseForm from "@/component/general/CourseForm";
 import TeacherForm from "@/component/general/TeacherForm";
 import BatchStudentForm from "./BatchStudentForm";
 import { Plus, X } from "lucide-react";
-import Link from "next/link";
-import { use, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import AssessmentsForm from "./AssessmentsForm";
-import { useParams } from "next/navigation";
-import CreateStudent from "@/component/CreateStudent/CreateStudent";
 import toast from "react-hot-toast";
 import { uploadBatches } from "@/api/batches/create-batches";
 import useLogs from "@/lib/useLogs";
 import { useColors } from "@/component/general/(Color Manager)/useColors";
+import axiosInstance from "@/lib/axios";
 
 type TabsProps = {
   value: string;
@@ -91,8 +89,7 @@ export const Tabs = ({
       formData.append("batchId", batchId);
 
       await uploadBatches(batchId as string, file, "STUDENT", null);
-
-      window.location.reload();
+      onStudentCreated?.();
       toast.success("Students uploaded successfully", {
         id: "bulk-upload",
       });
@@ -105,6 +102,47 @@ export const Tabs = ({
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+    }
+  };
+
+  const handleDownloadStudentFormat = async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/api/v1/students/get-student-by-batch/${batchId}`,
+      );
+      const students = response.data?.data || [];
+
+      const headers = ["name", "roll_number", "email", "batch_name"];
+      const rows = Array.isArray(students) && students.length > 0
+        ? students.map((student: any) => [
+            student.name || "",
+            student.rollNumber || "",
+            student.email || "",
+            batchName || "",
+          ])
+        : [["John Doe", "ROLL-001", "john.doe@example.com", batchName || "Batch-A"]];
+
+      const escapeCsvValue = (value: string) => {
+        const normalized = String(value ?? "").replace(/"/g, '""');
+        return `"${normalized}"`;
+      };
+
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row: string[]) => row.map(escapeCsvValue).join(",")),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${batchName || "students"}-bulk-format.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error("Failed to download student format");
     }
   };
 
@@ -127,6 +165,8 @@ export const Tabs = ({
           >
             <button
               onClick={() => setAddNew(false)}
+              title="Close"
+              aria-label="Close"
               className={`absolute top-4 right-4 ${Colors.text.secondary} hover:text-red-500 cursor-pointer active:scale-95`}
             >
               <X />
@@ -183,13 +223,12 @@ export const Tabs = ({
           logRole != 5 &&
           logRole != 4 && (
             <>
-              <Link
-                href="https://res.cloudinary.com/djy3ewpb8/raw/upload/v1772358905/studentInfo_qd7tzr.xlsx"
-                download
+              <button
+                onClick={handleDownloadStudentFormat}
                 className={`px-4 py-2 rounded-md ${Colors.hover.special} ${Colors.text.special} ${Colors.border.specialThick} cursor-pointer active:scale-95 transition-all`}
               >
-                <button>Download Format</button>
-              </Link>
+                Download Format
+              </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className={`flex items-center gap-2 border ${Colors.border.specialThick} ${Colors.text.special} ${Colors.hover.special} cursor-pointer active:scale-95 px-3 py-2 rounded`}

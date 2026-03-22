@@ -69,6 +69,12 @@ async def run_code(body: RunCodeRequest, current_user: dict = Depends(get_curren
 @router.post("/compile")
 async def compile_code(body: CompileCodeRequest):
     result = await execute_code(body.language, body.code, body.stdin)
+    if result.get("error"):
+        error_message = str(result.get("error"))
+        details = result.get("details")
+        if details:
+            error_message = f"{error_message}: {details}"
+        return api_response(400, "Compile failed", error=error_message)
     run_output = result.get("run", {})
     return api_response(200, "Code compiled", data={
         "stdout": run_output.get("stdout", ""),

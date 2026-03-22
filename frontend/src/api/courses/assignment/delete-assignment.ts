@@ -6,7 +6,7 @@ export const deleteAssignmentById = async (assignmentId: string) => {
     if (!assignmentId) throw new Error("Assignment ID is Required");
 
     const res = await axiosInstance.delete(
-      `/api/course/assignment/delete-assignment/${assignmentId}`,
+      `/api/v1/courses/remove-assignment-from-section/${assignmentId}`,
     );
 
     return res.data;

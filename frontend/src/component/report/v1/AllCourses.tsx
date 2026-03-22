@@ -46,7 +46,6 @@ function AllCourses() {
       let data;
       if (instituteInfo?.data.id) {
         data = await getInstitutionCourses(instituteInfo?.data.id);
-        data = data.data;
       } else {
         data = await getAllCourses(true);
       }

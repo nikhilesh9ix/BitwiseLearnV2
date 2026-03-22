@@ -5,15 +5,14 @@ export async function POST(req: NextRequest) {
   try {
     const backendUrl = process.env.BACKEND_URL;
     const data = await req.json();
-    console.log(backendUrl);
+
     if (!backendUrl) {
       return NextResponse.json(
         { error: "Backend URL not configured" },
         { status: 500 },
       );
     }
-    const token = req.cookies.get("token") || "";
-    if (!token) throw new Error("Token not found");
+
     const cookieHeader = req.headers.get("cookie");
     const response = await axiosInstance.post(
       `${backendUrl}/api/v1/code/compile`,
@@ -26,13 +25,18 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    return NextResponse.json(response.data.data, { status: 200 });
+    return NextResponse.json(response.data?.data ?? response.data, { status: 200 });
   } catch (error: any) {
-    console.error("Error fetching institutions:", error.message);
+    const status = error?.response?.status || 500;
+    const message =
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to compile code";
 
     return NextResponse.json(
-      { error: "Failed to fetch institutions" },
-      { status: 500 },
+      { error: message },
+      { status },
     );
   }
 }

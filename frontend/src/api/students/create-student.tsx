@@ -13,12 +13,13 @@ export type CreateStudentPayload = {
 export const createStudent = async (payload: CreateStudentPayload) => {
   try {
     const response = await axiosInstance.post(
-      "/api/student/create-student",
+      "/api/v1/students/create-student",
       payload,
     );
 
     return response.data?.data;
   } catch (error) {
     toast.error("failed to create student");
+    throw error;
   }
 };

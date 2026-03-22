@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 export const updateDescription = async (id: string, data: any) => {
   try {
     // console.log("problem id is " + id);
-    await axiosInstance.post("/api/admin/update-problem/" + id, {
+    await axiosInstance.patch("/api/v1/problems/update-problem/" + id, {
       name: data.name,
       description: data.description,
       hints: data.hints || [],
@@ -12,8 +12,8 @@ export const updateDescription = async (id: string, data: any) => {
     });
 
     if (data.problemTopics.tagName.length > 0) {
-      await axiosInstance.post(
-        "/api/admin/update-topic/" + data.problemTopics[0].id,
+      await axiosInstance.patch(
+        "/api/v1/problems/update-topic-to-problem/" + data.problemTopics[0].id,
         {
           tagName: data.problemTopics[0].tagName,
         },

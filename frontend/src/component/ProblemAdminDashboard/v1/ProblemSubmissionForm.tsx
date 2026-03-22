@@ -1,7 +1,7 @@
 "use client";
 import { createProblem } from "@/api/problems/create-admin-problem";
 import MarkdownEditor from "@/component/ui/MarkDownEditor";
-import { X } from "lucide-react";
+import { X, Plus, Trash2, Save } from "lucide-react";
 import { useState } from "react";
 import { useColors } from "@/component/general/(Color Manager)/useColors";
 import toast from "react-hot-toast";
@@ -31,8 +31,11 @@ Output:
     copy[i] = v;
     setHints(copy);
   };
-  const removeHint = (i: number) =>
-    setHints(hints.filter((_, idx) => idx !== i));
+  const removeHint = (i: number) => {
+    if (hints.length > 1) {
+      setHints(hints.filter((_, idx) => idx !== i));
+    }
+  };
 
   const handleSubmit = async () => {
     const nextErrors: { name?: string; description?: string } = {};
@@ -65,124 +68,133 @@ Output:
   };
 
   return (
-    <div
-      className={`fixed inset-0 z-50 bg-black/60 flex items-center justify-center`}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div
-        className={`flex h-[80svh] w-full max-w-6xl flex-col rounded-lg ${Colors.background.secondary} shadow-xl`}
+        className={`flex h-[90vh] w-full max-w-4xl flex-col rounded-xl ${Colors.background.secondary} shadow-2xl border ${Colors.border.primary || "border-white/10"}`}
       >
-        {/* Sticky Header */}
-        <div
-          className={`sticky top-0 z-10 flex items-center justify-between border-b border-white/10 ${Colors.background.secondary} px-6 py-4 rounded-lg`}
-        >
+        {/* Header */}
+        <div className={`flex items-center justify-between border-b border-white/10 px-6 py-4`}>
           <div>
-            <h2 className={`text-xl font-semibold ${Colors.text.primary}`}>
+            <h2 className={`text-xl font-bold ${Colors.text.primary}`}>
               Add New Problem
             </h2>
-            <p className={`${Colors.text.secondary} text-xs`}>
-              GitHub-flavored Markdown editor
+            <p className={`text-sm ${Colors.text.secondary} mt-1`}>
+              Create a new coding challenge for students.
             </p>
           </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={handleSubmit}
-              className={`rounded-lg ${Colors.background.special} px-5 py-2 text-sm font-medium ${Colors.text.primary} shadow-md hover:opacity-90`}
-            >
-              Submit Problem
-            </button>
-            <button onClick={() => setOpen(false)}>
-              <X className={Colors.text.primary} size={24} />
-            </button>
-          </div>
+          <button
+            onClick={() => setOpen(false)}
+            className={`p-2 rounded-full hover:bg-white/5 transition-colors ${Colors.text.secondary} hover:${Colors.text.primary}`}
+          >
+            <X size={20} />
+          </button>
         </div>
 
         {/* Scrollable Content */}
-        <div
-          className={`flex-1 overflow-y-auto px-6 py-6 space-y-6 ${Colors.text.primary} no-scrollbar`}
-        >
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar">
           {/* Problem Name */}
-          <div className="space-y-1">
-            <label className={`text-sm ${Colors.text.secondary}`}>
-              Problem Name
+          <div className="space-y-2">
+            <label className={`block text-sm font-medium ${Colors.text.primary}`}>
+              Problem Title <span className="text-red-500">*</span>
             </label>
             <input
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (errors.name) setErrors({ ...errors, name: undefined });
+              }}
               placeholder="e.g. Two Sum"
-              aria-invalid={Boolean(errors.name)}
-              aria-describedby={errors.name ? "problem-name-error" : undefined}
-              className={`w-full rounded-md ${Colors.background.primary} border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primaryBlue ${errors.name ? "border-red-500/70" : "border-white/10"
-                }`}
+              className={`w-full rounded-lg ${Colors.background.primary} border ${errors.name ? "border-red-500" : "border-white/10"} px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-gray-500 ${Colors.text.primary}`}
             />
             {errors.name && (
-              <p id="problem-name-error" className="text-xs text-red-400">
-                {errors.name}
-              </p>
+              <p className="text-xs text-red-400 mt-1">{errors.name}</p>
             )}
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <label className={`text-sm ${Colors.text.secondary}`}>
-              Problem Description
+            <label className={`block text-sm font-medium ${Colors.text.primary}`}>
+              Problem Description <span className="text-red-500">*</span>
             </label>
             <div
-              className={`rounded-md border ${Colors.background.secondary} ${errors.description ? "border-red-500/70" : "border-white/10"
-                }`}
-              aria-invalid={Boolean(errors.description)}
-              aria-describedby={
-                errors.description ? "problem-description-error" : undefined
-              }
+              className={`rounded-lg border overflow-hidden ${errors.description ? "border-red-500" : "border-white/10"} focus-within:ring-2 focus-within:ring-blue-500/50 transition-all`}
             >
               <MarkdownEditor
                 value={description}
-                setValue={setDescription}
+                setValue={(val: string) => {
+                  setDescription(val);
+                  if (errors.description) setErrors({ ...errors, description: undefined });
+                }}
                 mode={"live"}
-                theme="light"
+                theme="light" // Ideally should match app theme if possible
                 hideToolbar={false}
               />
             </div>
             {errors.description && (
-              <p
-                id="problem-description-error"
-                className="text-xs text-red-400"
-              >
-                {errors.description}
-              </p>
+              <p className="text-xs text-red-400 mt-1">{errors.description}</p>
             )}
+            <p className={`text-xs ${Colors.text.secondary}`}>
+              Supports GitHub Flavored Markdown.
+            </p>
           </div>
 
-          {/* Hints */}
-          <div className="space-y-2">
-            <label className={`text-sm ${Colors.text.secondary}`}>Hints</label>
-
-            {hints.map((hint, index) => (
-              <div key={index} className="flex gap-2">
-                <input
-                  value={hint}
-                  onChange={(e) => updateHint(index, e.target.value)}
-                  placeholder={`Hint ${index + 1}`}
-                  className={`flex-1 rounded-md ${Colors.background.primary} border border-white/10 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primaryBlue`}
-                />
-                {hints.length > 1 && (
+          {/* Hints Section */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className={`block text-sm font-medium ${Colors.text.primary}`}>
+                Hints
+              </label>
+              <button
+                onClick={addHint}
+                className={`text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors`}
+              >
+                <Plus size={14} /> Add Hint
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {hints.map((hint, index) => (
+                <div key={index} className="flex gap-2 group">
+                  <div className="relative flex-1">
+                    <span className={`absolute left-3 top-3 text-xs ${Colors.text.secondary} select-none`}>
+                      #{index + 1}
+                    </span>
+                    <input
+                      value={hint}
+                      onChange={(e) => updateHint(index, e.target.value)}
+                      placeholder="Enter a helpful hint..."
+                      className={`w-full rounded-lg ${Colors.background.primary} border border-white/10 pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all ${Colors.text.primary}`}
+                    />
+                  </div>
                   <button
                     onClick={() => removeHint(index)}
-                    className="rounded-md bg-red-500/10 px-3 text-red-400 hover:bg-red-500/20"
+                    disabled={hints.length === 1}
+                    className={`p-2.5 rounded-lg border border-transparent ${hints.length > 1 ? "text-red-400 hover:bg-red-500/10 hover:border-red-500/20" : "text-gray-600 cursor-not-allowed"} transition-all`}
+                    title="Remove hint"
                   >
-                    ✕
+                    <Trash2 size={18} />
                   </button>
-                )}
-              </div>
-            ))}
-
-            <button
-              onClick={addHint}
-              className="text-sm text-primaryBlue hover:underline"
-            >
-              + Add another hint
-            </button>
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div className={`p-6 border-t border-white/10 flex justify-end gap-3 ${Colors.background.secondary} rounded-b-xl`}>
+          <button
+            onClick={() => setOpen(false)}
+            className={`px-5 py-2.5 rounded-lg text-sm font-medium ${Colors.text.secondary} hover:bg-white/5 transition-colors`}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium shadow-lg hover:shadow-blue-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0`}
+          >
+            <Save size={18} />
+            Create Problem
+          </button>
         </div>
       </div>
     </div>

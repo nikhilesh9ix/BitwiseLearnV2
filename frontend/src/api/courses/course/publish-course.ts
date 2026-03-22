@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 export const publishCourse = async (courseId: string, stateFn?: any) => {
   try {
     const res = await axiosInstance.put(
-      `/api/course/publish-course/${courseId}`,
+      `/api/v1/courses/change-publish-status/${courseId}`,
     );
 
     if (stateFn) {

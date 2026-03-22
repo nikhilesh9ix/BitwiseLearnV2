@@ -16,6 +16,8 @@ import openpyxl
 import io
 import secrets
 import string
+import re
+import csv
 
 router = APIRouter(prefix="/api/v1/bulk-upload", tags=["Bulk Upload"])
 
@@ -39,20 +41,63 @@ async def bulk_upload_students(
     institution_id = str(batch.institution_id)
 
     contents = await file.read()
-    wb = openpyxl.load_workbook(io.BytesIO(contents))
-    ws = wb.active
+
+    rows: list[tuple] = []
+    file_name = (file.filename or "").lower()
+    if file_name.endswith(".csv"):
+        text = contents.decode("utf-8-sig")
+        reader = csv.reader(io.StringIO(text))
+        rows = [tuple(row) for row in reader]
+    else:
+        wb = openpyxl.load_workbook(io.BytesIO(contents))
+        ws = wb.active
+        rows = list(ws.iter_rows(values_only=True))
 
     created = 0
-    errors = []
-    for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+    errors: list[str] = []
+
+    def _looks_like_email(value: str) -> bool:
+        return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", value or ""))
+
+    for idx, row in enumerate(rows[1:], start=2):
         if not row or not row[0]:
             continue
+
         name = str(row[0]).strip()
-        email = str(row[1]).strip() if len(row) > 1 and row[1] else ""
-        phone = str(row[2]).strip() if len(row) > 2 and row[2] else ""
+
+        # Supported formats:
+        # 1) New: [name, roll_number, email, batch_name]
+        # 2) Legacy: [name, email, phone]
+        col2 = str(row[1]).strip() if len(row) > 1 and row[1] else ""
+        col3 = str(row[2]).strip() if len(row) > 2 and row[2] else ""
+        col4 = str(row[3]).strip() if len(row) > 3 and row[3] else ""
+
+        if _looks_like_email(col2):
+            # Legacy sheet without roll number
+            email = col2
+            roll_number = f"AUTO-{idx}"
+            batch_name = ""
+        else:
+            roll_number = col2
+            email = col3
+            batch_name = col4
+
+        if not roll_number:
+            errors.append(f"Row {idx}: Missing roll number")
+            continue
 
         if not email:
             errors.append(f"Row {idx}: Missing email")
+            continue
+
+        if not _looks_like_email(email):
+            errors.append(f"Row {idx}: Invalid email '{email}'")
+            continue
+
+        if batch_name and batch_name.strip().lower() != str(batch.batchname).strip().lower():
+            errors.append(
+                f"Row {idx}: Batch name '{batch_name}' does not match current batch '{batch.batchname}'"
+            )
             continue
 
         existing = await Student.find_one(Student.email == email)
@@ -60,13 +105,21 @@ async def bulk_upload_students(
             errors.append(f"Row {idx}: Email {email} already exists")
             continue
 
+        existing_roll = await Student.find_one(
+            Student.roll_number == roll_number,
+            Student.batch_id == PydanticObjectId(batch_id),
+        )
+        if existing_roll:
+            errors.append(f"Row {idx}: Roll number {roll_number} already exists in this batch")
+            continue
+
         password = _generate_password()
         student = Student(
             name=name,
+            roll_number=roll_number,
             email=email,
-            phone=phone,
-            password=hash_password(password),
-            institution_id=PydanticObjectId(institution_id),
+            login_password=hash_password(password),
+            institute_id=PydanticObjectId(institution_id),
             batch_id=PydanticObjectId(batch_id),
         )
         await student.insert()
@@ -92,7 +145,7 @@ async def bulk_upload_batches(
     ws = wb.active
 
     created = 0
-    errors = []
+    errors: list[str] = []
     for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
         if not row or not row[0]:
             continue
@@ -126,7 +179,7 @@ async def bulk_upload_testcases(
     ws = wb.active
 
     created = 0
-    errors = []
+    errors: list[str] = []
     for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
         if not row or row[0] is None:
             continue
@@ -159,7 +212,7 @@ async def bulk_upload_cloud_info(
     ws = wb.active
 
     updated = 0
-    errors = []
+    errors: list[str] = []
     for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
         if not row or not row[0]:
             continue

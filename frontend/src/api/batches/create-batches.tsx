@@ -20,5 +20,6 @@ export const uploadBatches = async (
     return res.data;
   } catch (error) {
     toast.error("failed to upload batch");
+    throw error;
   }
 };

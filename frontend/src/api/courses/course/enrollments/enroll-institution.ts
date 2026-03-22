@@ -7,7 +7,7 @@ export async function enrollInstitutionCourses(data: {
 }) {
   try {
     const result = await axiosInstance.post(
-      "/api/course/create-enrollment",
+      "/api/v1/courses/add-course-enrollment",
       data,
     );
     toast.success("enrolled");

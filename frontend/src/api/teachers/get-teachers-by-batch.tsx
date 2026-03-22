@@ -4,10 +4,9 @@ import toast from "react-hot-toast";
 export const getTeachersByBatch = async (statefn: any, paramId: string) => {
   try {
     const getTeachers = await axiosInstance.get(
-      "/api/teacher/get-by-batch/" + paramId,
+      "/api/v1/teachers/get-teacher-by-batch/" + paramId,
     );
-    // (getTeachers.data);
-    statefn(getTeachers.data);
+    statefn(getTeachers.data?.data || []);
   } catch (error) {
     toast.error("failed to get teacher by batch");
   }

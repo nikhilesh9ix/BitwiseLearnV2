@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 export const getAllProblemTemplate = async (statefn: any, id: string) => {
   try {
     const getProblem = await axiosInstance.get(
-      "/api/get-problem/template/" + id,
+      "/api/v1/problems/admin/get-dsa-problem/templates/" + id,
     );
     statefn(getProblem.data);
   } catch (error) {

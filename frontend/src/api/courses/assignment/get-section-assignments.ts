@@ -7,7 +7,7 @@ export const getAssignmentsBySection = async (
 ) => {
   try {
     const res = await axiosInstance.get(
-      `/api/course/assignment/get-all-section-assignments/${sectionId}`,
+      `/api/v1/courses/get-all-section-assignments/${sectionId}`,
     );
 
     if (stateFn) {

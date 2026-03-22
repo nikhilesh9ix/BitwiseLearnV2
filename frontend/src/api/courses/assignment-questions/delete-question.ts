@@ -6,7 +6,7 @@ export const deleteAssignmentQuestion = async (questionId: string) => {
     if (!questionId) throw new Error("Question ID is required");
 
     const res = await axiosInstance.delete(
-      `/api/course/assignment-question/delete/${questionId}`,
+      `/api/v1/courses/remove-assignment-question/${questionId}`,
     );
 
     return res.data;

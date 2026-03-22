@@ -13,8 +13,12 @@ export const updateAssignment = async (
 ) => {
   try {
     const res = await axiosInstance.put(
-      `/api/course/assignment/update-assignment/${assignmentId}`,
-      data,
+      `/api/v1/courses/update-assignment-to-section/${assignmentId}`,
+      {
+        description: data.description,
+        marks_per_question: data.marksPerQuestion,
+        instruction: data.instruction,
+      },
     );
 
     return res.data;

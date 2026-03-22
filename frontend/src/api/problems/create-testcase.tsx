@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 export const createTestCase = async (problemId: string, data: any) => {
   try {
     const response = await axiosInstance.post(
-      "/api/admin/create-testcase/" + problemId,
+      "/api/v1/problems/add-testcase-to-problem/" + problemId,
       data,
     );
 

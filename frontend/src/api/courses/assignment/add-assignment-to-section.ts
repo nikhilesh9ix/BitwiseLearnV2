@@ -15,8 +15,14 @@ export const addAssignmentToSection = async (
 ) => {
   try {
     const res = await axiosInstance.post(
-      "/api/course/assignment/add-assignment-to-section",
-      payload,
+      "/api/v1/courses/add-assignment-to-section/",
+      {
+        name: payload.name,
+        description: payload.description,
+        instruction: payload.instruction,
+        marks_per_question: payload.marksPerQuestion,
+        section_id: payload.sectionId,
+      },
     );
 
     if (stateFn) {

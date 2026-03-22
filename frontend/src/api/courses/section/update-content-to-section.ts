@@ -11,17 +11,15 @@ export const updateContentToSection = async (
   contentId: string,
   data: UpdateContentPayload,
 ) => {
-  const formData = new FormData();
+  const payload: any = {};
+  if (data.name) payload.name = data.name;
+  if (data.description) payload.description = data.description;
+  if (data.videoUrl) payload.video_url = data.videoUrl;
+  if (data.transcript) payload.transcript = data.transcript;
 
-  if (data.name) formData.append("name", data.name);
-  if (data.description) formData.append("description", data.description);
-  if (data.videoUrl) formData.append("videoUrl", data.videoUrl);
-  if (data.transcript) formData.append("transcript", data.transcript);
-
-  // console.log("content id is: ", contentId);
   const res = await axiosInstance.put(
-    `/api/course/update-content-by-sectionId/${contentId}`,
-    formData,
+    `/api/v1/courses/update-content-to-section/${contentId}`,
+    payload,
   );
 
   return res.data;

@@ -192,9 +192,8 @@ const DeleteSectionModal = ({
       toast.success("Section deleted successfully");
       onDeleted();
       onClose();
-    } catch (err) {
-      // console.error(err);
-      toast.error("Failed to delete section");
+    } catch {
+       // Helper handles toast
     } finally {
       setLoading(false);
     }
@@ -288,8 +287,7 @@ const DeleteAssessmentModal = ({
       toast.success("Assessment deleted successfully");
       onDeleted();
       onClose();
-    } catch (err) {
-      toast.error("Failed to delete assessment");
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -379,9 +377,8 @@ const DeleteQuestionModal = ({
       toast.success("Question deleted successfully");
       onDeleted();
       onClose();
-    } catch (err) {
-      // console.error(err);
-      toast.error("Failed to delete question");
+    } catch {
+       // Helper handles toast
     } finally {
       setLoading(false);
     }
@@ -582,10 +579,22 @@ const UpdateQuestionModal = ({
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (question) {
+      const safeOptions = Array.isArray(question.options)
+        ? question.options.map((option) => String(option ?? ""))
+        : [];
       setText(question.question ?? question.problem?.name ?? "");
-      setOptions(question.options);
-      setCorrect(question.correctOption);
-      setMarks(question.maxMarks);
+      setOptions(safeOptions);
+
+      if (typeof question.correctOption === "number") {
+        setCorrect(question.correctOption);
+      } else {
+        const correctIndex = safeOptions.findIndex(
+          (opt) => opt === (question.correctOption as unknown as string),
+        );
+        setCorrect(correctIndex >= 0 ? correctIndex : 0);
+      }
+
+      setMarks(Number(question.maxMarks ?? 1));
     }
   }, [question]);
 
@@ -598,7 +607,7 @@ const UpdateQuestionModal = ({
       const updated = await updateAssessmentQuestion(question.id, {
         question: text,
         options,
-        correctOption: options[correct],
+        correctOption: options[correct] || "",
         maxMarks: marks,
       });
 
@@ -632,13 +641,13 @@ const UpdateQuestionModal = ({
 
         {/* Options */}
         <div className="space-y-2">
-          {options.map((opt, idx) => (
+          {(options || []).map((opt, idx) => (
             <div key={idx} className="flex items-center gap-2">
               <input
-                value={opt}
+                value={opt ?? ""}
                 onChange={(e) => {
                   const updated = [...options];
-                  updated[idx] = e.target.value;
+                  updated[idx] = e.target.value ?? "";
                   setOptions(updated);
                 }}
                 className={`flex-1 rounded-lg ${Colors.background.primary} ${Colors.border.defaultThin} px-3 py-2 text-sm ${Colors.text.primary} outline-none`}
@@ -893,7 +902,11 @@ const AssessmentBuilderV1 = ({ assessmentId }: BuilderProps) => {
 
   const fetchSections = async () => {
     const data = await getAssessmentSections(assessmentId);
-    setSections(Array.isArray(data) ? data : []);
+    setSections(
+      Array.isArray(data)
+        ? data.filter((section) => section && section.id)
+        : [],
+    );
   };
 
   const fetchQuestions = async (sectionId: string) => {
@@ -905,7 +918,9 @@ const AssessmentBuilderV1 = ({ assessmentId }: BuilderProps) => {
       const data = await getSectionQuestions(sectionId);
       setQuestionsBySection((prev) => ({
         ...prev,
-        [sectionId]: data || [],
+        [sectionId]: Array.isArray(data)
+          ? data.filter((question) => question && question.id)
+          : [],
       }));
     } catch {
       toast.error("Failed to load questions");
@@ -1007,7 +1022,7 @@ const AssessmentBuilderV1 = ({ assessmentId }: BuilderProps) => {
 
       {/* Sections */}
       <div className="space-y-4">
-        {sections.map((section) => {
+        {sections.filter((section) => section && section.id).map((section) => {
           const isOpen = openSectionId === section.id;
 
           return (
@@ -1144,8 +1159,11 @@ const AssessmentBuilderV1 = ({ assessmentId }: BuilderProps) => {
                     <p className={`text-sm ${Colors.text.secondary}`}>
                       Loading questions…
                     </p>
-                  ) : questionsBySection[section.id!]?.length ? (
-                    questionsBySection[section.id!].map((q, i) => (
+                  ) : questionsBySection[section.id!]?.filter((q) => q && q.id)
+                      .length ? (
+                    questionsBySection[section.id!]
+                      .filter((q) => q && q.id)
+                      .map((q, i) => (
                       <div
                         key={q.id}
                         className={`rounded-xl ${Colors.background.primary} ${Colors.border.defaultThin} p-4 space-y-3`}
@@ -1190,9 +1208,9 @@ const AssessmentBuilderV1 = ({ assessmentId }: BuilderProps) => {
                         {/* Options */}
                         <div className="grid grid-cols-2 gap-2">
                           {q &&
-                            q.options.map((opt, idx) => {
+                            (q.options || []).map((opt, idx) => {
                               const isCorrect =
-                                q.options[idx] === q.correctOption;
+                                (q.options || [])[idx] === q.correctOption;
 
                               return (
                                 <div

@@ -12,11 +12,17 @@ export const updateAssessmentSection = async (
 ) => {
   try {
     const res = await axiosInstance.put(
-      `/api/assessments/update-assessment-section/${sectionId}`,
+      `/api/v1/assessments/update-assessment-section/${sectionId}`,
       data,
     );
     return res.data.data;
-  } catch (error) {
-    toast.error("error updating section");
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      "Error updating section";
+    toast.error(message);
+    throw error;
   }
 };

@@ -13,12 +13,17 @@ export const createAssessmentSection = async (
 ) => {
   try {
     const res = await axiosInstance.post(
-      "/api/assessments/create-assessment-section",
+      "/api/v1/assessments/add-assessment-section",
       payload,
     );
 
     return res.data.data;
-  } catch (error) {
-    toast.error("error creating section");
+  } catch (error: any) {
+    toast.error(
+      error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "error creating section",
+    );
+    throw error;
   }
 };

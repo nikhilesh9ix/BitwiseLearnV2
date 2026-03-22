@@ -3,8 +3,8 @@ import toast from "react-hot-toast";
 
 export async function changeStatus(problemId: string) {
   try {
-    const response = await axiosInstance.post(
-      "/api/admin/change-status/" + problemId,
+    const response = await axiosInstance.put(
+      "/api/v1/problems/change-status/" + problemId,
     );
     return response.data;
   } catch (error) {
@@ -14,7 +14,7 @@ export async function changeStatus(problemId: string) {
 export async function deleteStatus(problemId: string) {
   try {
     const response = await axiosInstance.delete(
-      "/api/admin/delete-problem/" + problemId,
+      "/api/v1/problems/delete-problem/" + problemId,
     );
     return response.data;
   } catch (error) {

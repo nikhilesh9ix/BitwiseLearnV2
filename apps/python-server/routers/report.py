@@ -13,7 +13,7 @@ from models.course_enrollment import CourseEnrollment
 from models.assessment import Assessment
 from models.assessment_submission import AssessmentSubmission
 from services.queue import publish_message
-from enums import ReportStatus
+from enums import ReportStatus, UserType
 import math
 
 router = APIRouter(prefix="/api/v1/reports", tags=["Reports"])
@@ -39,7 +39,7 @@ async def _load_batches_map(batch_ids: list[PydanticObjectId]) -> dict[str, Batc
 
 @router.get("/get-stats-count")
 async def get_stats_count(current_user: dict = Depends(admin_only)):
-    admins = await User.find_all().count()
+    admins = await User.find(User.role == UserType.ADMIN).count()
     institutions = await Institution.find_all().count()
     vendors = await Vendor.find_all().count()
     batches = await Batch.find_all().count()

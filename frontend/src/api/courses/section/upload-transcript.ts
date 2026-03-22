@@ -5,7 +5,7 @@ export const uploadTranscript = async (contentId: string, file: File) => {
   formData.append("content", file);
 
   const res = await axiosInstance.post(
-    `/api/course/upload-transcript/${contentId}`,
+    `/api/v1/courses/upload-file-in-content/${contentId}`,
     formData,
   );
 
