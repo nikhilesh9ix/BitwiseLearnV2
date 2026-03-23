@@ -64,7 +64,7 @@ async def seed():
         "name": SUPERADMIN_NAME,
         "email": SUPERADMIN_EMAIL,
         "password": hash_password(SUPERADMIN_PASSWORD),
-        "role": str(UserType.SUPERADMIN),
+        "role": UserType.SUPERADMIN.value,
     })
     print(f"[seed] Superadmin created successfully!")
     print(f"       Email:    {SUPERADMIN_EMAIL}")

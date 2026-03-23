@@ -3,10 +3,9 @@
 import { getProblemSolutionById } from "@/api/problems/get-problem-solution";
 import MDEditor from "@uiw/react-md-editor";
 import { useParams } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import AddSolution from "./AddSolution";
 import { updateSolution } from "@/api/problems/update-solution";
-import { THEME_MAP } from "@/component/ui/MarkDownEditor";
 import { useColors } from "@/component/general/(Color Manager)/useColors";
 import toast from "react-hot-toast";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
@@ -19,6 +18,7 @@ type SolutionType = {
 
 function Solution() {
   const Colors = useColors();
+  const { theme } = useTheme();
   const params = useParams();
   const problemId = params.id as string;
 
@@ -100,7 +100,7 @@ function Solution() {
 
       <div
         className="mt-4"
-        data-color-mode={useTheme().theme === "Dark" ? "dark" : "light"}
+        data-color-mode={theme === "Dark" ? "dark" : "light"}
       >
         <MDEditor
           height={600}
@@ -112,6 +112,7 @@ function Solution() {
             })
           }
           preview="live"
+          previewOptions={{ skipHtml: true }}
           hideToolbar={false}
           spellCheck
         />

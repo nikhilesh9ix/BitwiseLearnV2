@@ -124,13 +124,13 @@ function CodeCompiler() {
         stdin: input,
       });
 
-      const data = res.data || {};
-      if (data.signal === "SIGKILL") {
+      const payload = res.data?.data ?? res.data ?? {};
+      if (payload.signal === "SIGKILL") {
         setOutput("Execution timed out or was terminated.");
-      } else if (data.stderr) {
-        setOutput(data.stderr);
+      } else if (payload.stderr) {
+        setOutput(payload.stderr);
       } else {
-        setOutput(data.stdout || "No output");
+        setOutput(payload.stdout || "No output");
       }
     } catch (err: any) {
       const message =

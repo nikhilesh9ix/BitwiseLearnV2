@@ -113,8 +113,33 @@ EMAIL_USER=
 EMAIL_PASS=
 
 MQ_CLIENT=amqp://guest:guest@localhost/
-CODE_EXECUTION_SERVER=https://emkc.org/
+CODE_EXECUTION_SERVER=http://localhost:2000/
 ```
+
+## Self-Hosted Piston (Free Code Execution)
+
+Public EMKC execution endpoints are whitelist-restricted. For reliable free execution, run your own Piston instance.
+
+### Start Piston only
+
+```bash
+docker compose up -d piston
+```
+
+### Verify Piston is reachable
+
+```bash
+curl -X POST http://localhost:2000/api/v2/execute \
+  -H "Content-Type: application/json" \
+  -d '{"language":"python3","version":"*","files":[{"name":"main.py","content":"print(\"Hello, World!\")"}]}'
+```
+
+You should get JSON with `run.stdout`.
+
+### Run Bitwise with Piston
+
+- Monolith (`apps/python-server`) uses `CODE_EXECUTION_SERVER=http://localhost:2000/`.
+- Docker microservices are wired to `http://piston:2000/` for `code-service` and `assessment-service` in `docker-compose.yml`.
 
 ## Getting Started
 

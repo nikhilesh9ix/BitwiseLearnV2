@@ -1,4 +1,12 @@
 services:
+  piston:
+    image: ghcr.io/engineer-man/piston:latest
+    container_name: bitwise-piston
+    ports:
+      - "2000:2000"
+    restart: unless-stopped
+    privileged: true
+
   rabbitmq:
     image: rabbitmq:3-management
     ports:
@@ -93,8 +101,10 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       MQ_CLIENT: amqp://guest:guest@rabbitmq/
+      CODE_EXECUTION_SERVER: http://piston:2000/
     depends_on:
       - rabbitmq
+      - piston
 
   code-service:
     build:
@@ -106,8 +116,10 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       MQ_CLIENT: amqp://guest:guest@rabbitmq/
+      CODE_EXECUTION_SERVER: http://piston:2000/
     depends_on:
       - rabbitmq
+      - piston
 
   notification-service:
     build:

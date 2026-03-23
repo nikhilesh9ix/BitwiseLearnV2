@@ -2,6 +2,7 @@ import httpx
 from json import JSONDecodeError
 from config import get_settings
 from enums import Languages
+from urllib.parse import urlparse
 
 settings = get_settings()
 
@@ -50,25 +51,75 @@ async def execute_code(language: str, code: str, stdin: str = "") -> dict:
         "run_memory_limit": -1,
     }
 
+    base_url = settings.CODE_EXECUTION_SERVER.rstrip("/")
+    if base_url.endswith("/api/v2/execute"):
+        candidate_urls = [base_url]
+    elif base_url.endswith("/api/v2/piston"):
+        candidate_urls = [f"{base_url}/execute"]
+    elif base_url.endswith("/api/v2"):
+        candidate_urls = [
+            f"{base_url}/execute",
+            f"{base_url}/piston/execute",
+        ]
+    else:
+        candidate_urls = [
+            f"{base_url}/api/v2/piston/execute",
+            f"{base_url}/api/v2/execute",
+        ]
+
     async with httpx.AsyncClient(timeout=30.0) as client:
-        try:
-            resp = await client.post(
-                f"{settings.CODE_EXECUTION_SERVER}api/v2/execute",
-                json=payload,
-            )
-        except httpx.HTTPError as exc:
-            return {"error": f"Execution server request failed: {exc}"}
+        last_error: dict | None = None
 
-        if resp.status_code >= 400:
-            return {
-                "error": f"Execution server returned HTTP {resp.status_code}",
-                "details": resp.text[:500],
-            }
+        for url in candidate_urls:
+            try:
+                resp = await client.post(url, json=payload)
+            except httpx.HTTPError as exc:
+                parsed = urlparse(url)
+                is_local_piston = parsed.hostname in {"localhost", "127.0.0.1", "piston"}
+                if is_local_piston and parsed.port in {None, 2000}:
+                    last_error = {
+                        "error": (
+                            "Execution server request failed: local Piston is not reachable at "
+                            f"{url}. Start it with `docker compose up -d piston` or set "
+                            "CODE_EXECUTION_SERVER to a reachable Piston instance."
+                        )
+                    }
+                else:
+                    last_error = {"error": f"Execution server request failed: {exc}"}
+                continue
 
-        try:
-            return resp.json()
-        except JSONDecodeError:
-            return {
-                "error": "Execution server returned invalid response format",
-                "details": resp.text[:500],
-            }
+            if resp.status_code == 401:
+                message = "Execution server is not authorized for this project."
+                details = resp.text[:500]
+                if "whitelist" in details.lower():
+                    message = (
+                        "Execution server access denied (EMKC now requires whitelist). "
+                        "Set CODE_EXECUTION_SERVER to your own Piston instance."
+                    )
+                return {"error": message, "details": details}
+
+            if resp.status_code in (404, 405):
+                last_error = {
+                    "error": f"Execution server returned HTTP {resp.status_code}",
+                    "details": resp.text[:500],
+                }
+                continue
+
+            if resp.status_code >= 400:
+                return {
+                    "error": f"Execution server returned HTTP {resp.status_code}",
+                    "details": resp.text[:500],
+                }
+
+            try:
+                return resp.json()
+            except JSONDecodeError:
+                return {
+                    "error": "Execution server returned invalid response format",
+                    "details": resp.text[:500],
+                }
+
+        return last_error or {
+            "error": "Execution server request failed",
+            "details": "No reachable execution endpoint found",
+        }
