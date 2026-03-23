@@ -29,6 +29,7 @@ const LANGUAGE_MAP: Record<string, string> = {
 function Templates() {
   const param = useParams();
   const Colors = useColors();
+  const { theme } = useTheme();
 
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedLang, setSelectedLang] = useState<string | null>(null);
@@ -252,7 +253,7 @@ function Templates() {
           key={`${selectedLang}-${currentDisplay}-${isEditing}`}
           language={monacoLanguage}
           value={editorValue}
-          theme={useTheme().theme === "Dark" ? "vs-dark" : "vs-light"}
+          theme={theme === "Dark" ? "vs-dark" : "vs-light"}
           onChange={(value) => {
             if (!isEditing) return;
 
