@@ -1,5 +1,5 @@
 """
-One-time script to seed a SUPERADMIN user into MongoDB.
+One-time script to seed a SUPERADMIN user into the database.
 Run from the project root:
     uv run --no-project --with-requirements apps/python-server/requirements.txt seed_superadmin.py
 

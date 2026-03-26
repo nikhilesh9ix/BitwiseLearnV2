@@ -131,7 +131,7 @@ See: [AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md)
                        ┌────┤     ├────┐
                        │    │     │    │
                     (Shared Services)
-                    - MongoDB/RDS
+                    - Document DB/RDS
                     - RabbitMQ/AWS MQ
                     - Piston (Code Execution)
 ```
@@ -170,7 +170,7 @@ See: [AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md)
 1. **Environment Variables**: Store sensitive data in AWS Secrets Manager
    ```bash
    aws secretsmanager create-secret --name bitwise/prod/database-url \
-     --secret-string "mongodb://..."
+   --secret-string "<db_connection_string>"
    ```
 
 2. **IAM Roles**: Use least-privilege principle
@@ -241,8 +241,8 @@ docker run --rm bitwise-gateway:latest \
 ```bash
 # Verify database connectivity
 docker run --rm -it ubuntu:latest bash
-apt-get update && apt-get install -y mongodb-mongosh
-mongosh "mongodb://..." --eval "db.adminCommand('ping')"
+apt-get update && apt-get install -y mongosh
+mongosh "<db_connection_string>" --eval "db.adminCommand('ping')"
 ```
 
 ## 📚 Additional Resources

@@ -53,5 +53,5 @@ async def connect_to_mongo(settings: Settings) -> tuple[AsyncIOMotorClient, str]
     except PyMongoError as exc:
         client.close()
         raise RuntimeError(
-            f"Unable to connect to MongoDB using DATABASE_URL. Last error: {exc}"
+            f"Unable to connect to database using DATABASE_URL. Last error: {exc}"
         ) from exc

@@ -12,10 +12,10 @@ settings = get_settings()
 
 
 async def main():
-    # Initialize MongoDB + Beanie
+    # Initialize database + Beanie
     client, db_name = await connect_to_mongo(settings)
     await init_beanie(database=client[db_name], document_models=ALL_WORKER_MODELS)
-    print(f"Worker connected to MongoDB: {db_name}")
+    print(f"Worker database connected: {db_name}")
 
     # Start APScheduler for cron jobs
     scheduler = AsyncIOScheduler()

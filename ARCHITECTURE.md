@@ -11,7 +11,7 @@
 ### Pros
 - **Single process** — one `uvicorn` command, one log stream, one debugger
 - **Zero network overhead** — all function calls are in-process, no HTTP latency between services
-- **ACID transactions** — MongoDB sessions work across all collections natively
+- **ACID transactions** — database sessions work across all collections natively
 - **Simple deployment** — one Dockerfile, one server, one `.env`
 - **Easy to reason about** — entire codebase fits in your head at once
 - **Fast onboarding** — new dev can `uv pip install -r requirements.txt` and run immediately
@@ -40,7 +40,7 @@
 - **Kubernetes-native** — fits naturally into container orchestration with health checks and rolling deploys
 
 ### Cons
-- **Shared database** *(current setup)* — all services hit the same MongoDB, so data coupling of a monolith remains but with all the operational complexity of microservices — worst of both worlds unless databases are eventually split
+- **Shared database** *(current setup)* — all services hit the same database, so data coupling of a monolith remains but with all the operational complexity of microservices — worst of both worlds unless databases are eventually split
 - **9x startup complexity** — 9 processes, 9 terminals, 9 logs to check when something goes wrong
 - **Network failures** — a gateway timeout or connection refused becomes a new class of bug that didn't exist before
 - **No cross-service transactions** — if user-service creates a student and course-service creates an enrollment in the same request, there's no rollback if one fails
