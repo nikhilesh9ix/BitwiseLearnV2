@@ -9,10 +9,14 @@ $BASE = Split-Path -Parent $MyInvocation.MyCommand.Path
 $APPS = Join-Path $BASE "apps"
 $ENV_FILE = Join-Path $BASE ".env"
 
-# Install shared package in dev mode
-Write-Host "Installing shared package..." -ForegroundColor Cyan
-pip install -e "$APPS\shared" --quiet 2>&1 | Out-Null
-Write-Host "Shared package ready." -ForegroundColor Cyan
+# Verify uv is available
+if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+    Write-Host "uv is not installed or not available in PATH." -ForegroundColor Red
+    Write-Host "Install from: https://docs.astral.sh/uv/getting-started/installation/" -ForegroundColor Yellow
+    exit 1
+}
+
+Write-Host "Using uv ephemeral environments (no venv activation required)." -ForegroundColor Cyan
 
 $services = @(
     @{ Name = "gateway";              Port = 8000; Dir = "gateway" },
@@ -37,7 +41,7 @@ foreach ($svc in $services) {
 
     $jobs += Start-Process powershell -ArgumentList @(
         "-NoExit", "-Command",
-        "Set-Location '$svcDir'; `$env:PYTHONPATH='$APPS\shared'; uvicorn main:app --host 0.0.0.0 --port $port --reload"
+        "Set-Location '$svcDir'; uv run --no-project --with-editable '$APPS\shared' --with-requirements '$svcDir\requirements.txt' uvicorn main:app --host 0.0.0.0 --port $port --reload"
     ) -PassThru
 }
 

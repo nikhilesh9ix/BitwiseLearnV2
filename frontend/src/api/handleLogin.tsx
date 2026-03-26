@@ -38,7 +38,11 @@ async function handleLogin({ data }: { data: Prop }) {
       break;
 
     case "STUDENT":
-      setStudent(resData);
+      setStudent(
+        resData && typeof resData === "object" && "data" in resData
+          ? resData
+          : { data: resData },
+      );
       break;
 
     case "TEACHER":

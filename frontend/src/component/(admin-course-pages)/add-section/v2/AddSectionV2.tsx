@@ -15,6 +15,7 @@ import { deleteAssignmentById } from "@/api/courses/assignment/delete-assignment
 import QuestionEditorWrapper from "../../add-assignment/v1/QuestionEditorWrapper";
 import { useColors } from "@/component/general/(Color Manager)/useColors";
 import { uploadBatches } from "@/api/batches/create-batches";
+import { addAssignmentQuestion } from "@/api/courses/assignment-questions/add-question";
 
 type Props = {
   sectionNumber: number;
@@ -631,6 +632,7 @@ const AddSectionV2 = ({
   );
   const [deletingAssignment, setDeletingAssignment] = useState(false);
   const [assignmentRefetchKey, setAssignmentRefetchKey] = useState(0);
+  const [bulkUploadAssignmentId, setBulkUploadAssignmentId] = useState<string | null>(null);
   const Colors = useColors();
 
   const handleDeleteTopic = async () => {
@@ -695,21 +697,54 @@ const AddSectionV2 = ({
       const file = e.target.files?.[0];
       if (!file) return;
 
-      toast.loading("Uploading Assessments...", { id: "bulk-upload" });
+      toast.loading("Uploading assignment questions...", { id: "bulk-upload" });
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("id", sectionId);
+      if (!bulkUploadAssignmentId) {
+        throw new Error("Assignment not selected for bulk upload");
+      }
 
-      await uploadBatches(
-        selectedAssignment?.id as string,
+      const uploadResponse = await uploadBatches(
+        bulkUploadAssignmentId,
         file,
         "ASSIGNMENT",
         null,
       );
 
+      const rows = Array.isArray(uploadResponse?.data?.rows)
+        ? uploadResponse.data.rows
+        : [];
+
+      if (rows.length === 0) {
+        throw new Error("No valid questions found in uploaded file");
+      }
+
+      for (const row of rows) {
+        const questionText = String(row?.question ?? "").trim();
+        const options = Array.isArray(row?.options)
+          ? row.options
+              .map((option: unknown) => String(option ?? "").trim())
+              .filter(Boolean)
+          : [];
+        const correctAnswer = String(
+          row?.correct_option ?? row?.correctOption ?? "",
+        ).trim();
+
+        if (!questionText || options.length === 0 || !correctAnswer) {
+          continue;
+        }
+
+        await addAssignmentQuestion(bulkUploadAssignmentId, {
+          assignmentId: bulkUploadAssignmentId,
+          question: questionText,
+          options,
+          correctAnswer: [correctAnswer],
+        });
+      }
+
+      setAssignmentRefetchKey((prev) => prev + 1);
+
       // window.location.reload();
-      toast.success("Assessments uploaded successfully", {
+      toast.success("Assignment questions uploaded successfully", {
         id: "bulk-upload",
       });
     } catch (error) {
@@ -721,6 +756,7 @@ const AddSectionV2 = ({
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+      setBulkUploadAssignmentId(null);
     }
   };
 
@@ -970,6 +1006,7 @@ const AddSectionV2 = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedAssignment(assignment);
+                      setBulkUploadAssignmentId(assignment.id);
                       setIsAssignmentModalOpen(true);
                       fileInputRef.current?.click();
                     }}

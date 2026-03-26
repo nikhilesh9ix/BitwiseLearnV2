@@ -56,7 +56,7 @@ function CourseForm({ batchId }: { batchId: string }) {
 
   useEffect(() => {
     async function handleLoad() {
-      const data: Course[] = await getAllCourses(true);
+      const data: Course[] = await getAllCourses(false);
       setAllCourses(data);
     }
     handleLoad();

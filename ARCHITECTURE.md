@@ -14,7 +14,7 @@
 - **ACID transactions** — MongoDB sessions work across all collections natively
 - **Simple deployment** — one Dockerfile, one server, one `.env`
 - **Easy to reason about** — entire codebase fits in your head at once
-- **Fast onboarding** — new dev can `pip install -r requirements.txt` and run immediately
+- **Fast onboarding** — new dev can `uv pip install -r requirements.txt` and run immediately
 - **No distributed tracing needed** — stack traces show the full call chain
 - **No serialization overhead** — objects passed directly, not JSON-encoded over HTTP
 

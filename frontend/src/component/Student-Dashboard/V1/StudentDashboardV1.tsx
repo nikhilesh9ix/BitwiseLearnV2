@@ -1,6 +1,5 @@
 "use client";
 
-import SideBar from "@/component/general/SideBar";
 import HeroSection from "./HeroSection";
 import { useColors } from "@/component/general/(Color Manager)/useColors";
 import StudentSideBar from "@/component/general/StudentSidebar";

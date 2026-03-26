@@ -212,15 +212,20 @@ const StudentAssesmentv1 = () => {
     useState<StudentAssessment | null>(null);
 
   const { info: studentInfo } = useStudent();
+  const studentData =
+    (studentInfo as { data?: { batch?: { id?: string } }; batch?: { id?: string } } | null)
+      ?.data ??
+    (studentInfo as { batch?: { id?: string } } | null);
+  const studentBatchId = studentData?.batch?.id;
+
   const fetchAssessments = async () => {
     try {
       setLoading(true);
       let normalizedData: any[] = [];
-      const studentId = studentInfo?.data.batch.id;
-      if (!studentId) return;
+      if (!studentBatchId) return;
       await getAssessmentsByBatch((data: any) => {
         normalizedData = data;
-      }, studentId as any);
+      }, studentBatchId as any);
 
       //@ts-ignore
       normalizedData = normalizedData.map((a: any) => ({
@@ -237,7 +242,7 @@ const StudentAssesmentv1 = () => {
 
   useEffect(() => {
     fetchAssessments();
-  }, [studentInfo?.data.batch.id]);
+  }, [studentBatchId]);
 
   const liveAssessments = assessments.filter(
     (assessment) => assessment.status === "LIVE",

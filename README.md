@@ -85,6 +85,7 @@ BitwiseV2/
 ## Prerequisites
 
 - Python 3.11+
+- uv (recommended Python package/environment manager)
 - Node.js 18+
 - MongoDB (running locally or connection string)
 - RabbitMQ (optional — for async report generation)
@@ -148,8 +149,7 @@ You should get JSON with `run.stdout`.
 ```bash
 # Backend
 cd apps/python-server
-pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uv run --no-project --with-requirements requirements.txt uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 # Frontend (separate terminal)
 cd frontend

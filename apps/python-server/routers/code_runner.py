@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
 from beanie import PydanticObjectId
 from schemas.problem import RunCodeRequest, CompileCodeRequest, SubmitCodeRequest
@@ -75,6 +74,26 @@ async def compile_code(body: CompileCodeRequest):
         if details:
             error_message = f"{error_message}: {details}"
         return api_response(400, "Compile failed", error=error_message)
+
+    compile_output = result.get("compile") or {}
+    if compile_output:
+        compile_code_value = compile_output.get("code")
+        if compile_code_value not in (None, 0):
+            compile_error = (
+                compile_output.get("stderr")
+                or compile_output.get("output")
+                or compile_output.get("message")
+                or "Compilation failed"
+            )
+            return api_response(400, "Compile failed", error=compile_error)
+
+        return api_response(200, "Code compiled", data={
+            "stdout": compile_output.get("stdout", ""),
+            "stderr": compile_output.get("stderr", ""),
+            "code": compile_code_value,
+            "signal": compile_output.get("signal"),
+        })
+
     run_output = result.get("run", {})
     return api_response(200, "Code compiled", data={
         "stdout": run_output.get("stdout", ""),

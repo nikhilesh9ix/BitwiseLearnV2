@@ -41,6 +41,7 @@ export default function QuestionEditorWrapper({
 
         const assignment = res.data;
         const backendQuestions =
+          assignment?.questions ||
           assignment?.courseAssignmentQuestions ||
           assignment?.courseAssignemntQuestions ||
           [];
@@ -58,14 +59,19 @@ export default function QuestionEditorWrapper({
         const mappedQuestions = backendQuestions.map((q: any) => ({
           id: q.id,
           isNew: false,
-          text: q.question,
-          options: q.options.map((opt: any) => {
+          text: q.question || "",
+          options: (q.options || []).map((opt: any) => {
             const text = typeof opt === "string" ? opt : opt.text;
+            const correctAnswers = Array.isArray(q.correctAnswer)
+              ? q.correctAnswer
+              : q.correctAnswer
+                ? [q.correctAnswer]
+                : [];
 
             return {
               id: uuid(),
               text,
-              isCorrect: q.correctAnswer.includes(text),
+              isCorrect: correctAnswers.includes(text),
             };
           }),
         }));

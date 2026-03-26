@@ -5,7 +5,7 @@ from beanie import PydanticObjectId
 from schemas.user import CreateAdminRequest, UpdateAdminRequest
 from utils.api_response import api_response
 from utils.password import hash_password
-from middleware.auth import get_current_user, superadmin_only, admin_only
+from middleware.auth import superadmin_only, admin_only
 from models.user import User
 from models.institution import Institution
 from models.vendor import Vendor
@@ -14,7 +14,6 @@ from models.teacher import Teacher
 from models.batch import Batch
 from models.course import Course
 from models.assessment import Assessment
-from models.course_enrollment import CourseEnrollment
 from enums import UserType
 from services.email import send_welcome_email
 

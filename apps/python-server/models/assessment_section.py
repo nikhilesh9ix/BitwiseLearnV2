@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from beanie import Document, PydanticObjectId
 from pydantic import Field
-from enums import AssessmentType
 
 
 class AssessmentSection(Document):

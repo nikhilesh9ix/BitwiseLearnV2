@@ -1,4 +1,3 @@
-import StudentSideBar from "@/component/general/StudentSidebar";
 import React from "react";
 import CodeCompiler from "./CodeCompiler";
 import SideBar from "@/component/general/SideBar";

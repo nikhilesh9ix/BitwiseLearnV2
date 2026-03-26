@@ -10,12 +10,15 @@ import Submission from "./Submission";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useColors } from "@/component/general/(Color Manager)/useColors";
-import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
-import useLogs from "@/lib/useLogs";
+type ProblemViewData = {
+  id: string;
+  solution?: string;
+  problemTemplates?: unknown[];
+  testCases?: unknown[];
+};
 
-function V1Problem({ data }: any) {
+function V1Problem({ data }: { data: ProblemViewData }) {
   const Colors = useColors();
-  const theme = useTheme();
 
   /* Sidebar */
   const [sidebarWidth, setSidebarWidth] = useState(720);
@@ -125,8 +128,6 @@ function V1Problem({ data }: any) {
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
-              //@ts-ignore
-              WebkitScrollbar: { display: "none" },
             }}
           >
             <TabsContent value="description">
@@ -182,8 +183,6 @@ function V1Problem({ data }: any) {
             flex: `${100 - editorRatio} 0 0`,
             scrollbarWidth: "none",
             msOverflowStyle: "none",
-            //@ts-ignore
-            WebkitScrollbar: { display: "none" },
           }}
           className="overflow-y-auto min-h-0"
         >

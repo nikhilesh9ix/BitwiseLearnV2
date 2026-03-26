@@ -8,10 +8,10 @@ export const uploadThumbnail = async (
 ) => {
   try {
     const formData = new FormData();
-    formData.append("thumbnail", file);
+    formData.append("file", file);
 
     const res = await axiosInstance.post(
-      `/api/v1/courses/upload-thumbnail/${courseId}`,
+      `/api/course/upload-thumbnail/${courseId}`,
       formData,
     );
 
@@ -20,7 +20,8 @@ export const uploadThumbnail = async (
     }
 
     return res.data;
-  } catch (error) {
-    // toast.error("failed to upload course thumbnail");
+  } catch (error: any) {
+    toast.error(error?.response?.data?.message || "failed to upload course thumbnail");
+    throw error;
   }
 };

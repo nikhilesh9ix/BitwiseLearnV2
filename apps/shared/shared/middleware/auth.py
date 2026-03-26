@@ -1,5 +1,4 @@
 from fastapi import Request, HTTPException, Depends
-from typing import Callable, List
 from shared.utils.jwt import verify_access_token
 from shared.models.user import User
 from shared.models.institution import Institution

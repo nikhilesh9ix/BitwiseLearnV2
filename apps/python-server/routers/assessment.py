@@ -14,9 +14,7 @@ from models.assessment_section import AssessmentSection
 from models.assessment_question import AssessmentQuestion
 from models.assessment_submission import AssessmentSubmission
 from models.assessment_question_submission import AssessmentQuestionSubmission
-from models.student import Student
 from models.batch import Batch
-from models.institution import Institution
 from services.piston import execute_code
 from services.queue import publish_message
 from enums import UserType, AssessmentStatus, AssessmentType, ReportStatus

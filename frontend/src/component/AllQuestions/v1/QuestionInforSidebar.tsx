@@ -27,7 +27,26 @@ function QuestionInfoSidebar() {
   useEffect(() => {
     async function handleLoad() {
       const res = await loadProfile();
-      setQuestion(res);
+      const toSafeNumber = (value: unknown) => {
+        const numeric = Number(value);
+        return Number.isFinite(numeric) && numeric >= 0 ? numeric : 0;
+      };
+
+      const easy = toSafeNumber(res?.easy);
+      const medium = toSafeNumber(res?.medium);
+      const hard = toSafeNumber(res?.hard);
+      const computedTotal = easy + medium + hard;
+      const totalQuestion = Math.max(
+        toSafeNumber(res?.totalQuestion),
+        computedTotal,
+      );
+
+      setQuestion({
+        easy,
+        medium,
+        hard,
+        totalQuestion,
+      });
     }
     handleLoad();
   }, []);
@@ -35,9 +54,10 @@ function QuestionInfoSidebar() {
     setSolved(question.easy + question.medium + question.hard);
   }, [question]);
 
-  const easyPercent = question ? question.easy / question.totalQuestion : 0;
-  const mediumPercent = question ? question.medium / question.totalQuestion : 0;
-  const hardPercent = question ? question.hard / question.totalQuestion : 0;
+  const safeTotal = question.totalQuestion > 0 ? question.totalQuestion : 1;
+  const easyPercent = question.easy / safeTotal;
+  const mediumPercent = question.medium / safeTotal;
+  const hardPercent = question.hard / safeTotal;
 
   const easyLength = CIRCUMFERENCE * easyPercent;
   const mediumLength = CIRCUMFERENCE * mediumPercent;

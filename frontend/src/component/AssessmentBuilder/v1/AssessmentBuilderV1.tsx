@@ -948,7 +948,18 @@ const AssessmentBuilderV1 = ({ assessmentId }: BuilderProps) => {
 
       toast.loading("Uploading Assessments...", { id: "bulk-upload" });
 
-      await uploadBatches(bulkUploadSectionId, file, "ASSESSMENT", null);
+      const uploadResponse = await uploadBatches(
+        bulkUploadSectionId,
+        file,
+        "ASSESSMENT",
+        null,
+      );
+
+      const created = Number(uploadResponse?.data?.created ?? 0);
+
+      if (created <= 0) {
+        throw new Error("No questions were created from uploaded file");
+      }
 
       toast.success("Assessments uploaded successfully", {
         id: "bulk-upload",

@@ -38,7 +38,7 @@ function Solution() {
     try {
       setLoading(true);
 
-      await updateSolution(problemId, {
+      await updateSolution(solution.id, {
         solution: solution.solution,
         videoSolution: solution.videoSolution,
       });

@@ -10,13 +10,21 @@ type TestCase = {
   testType: string;
 };
 
+type OutputCase = {
+  input?: string;
+  isCorrect?: boolean;
+  output?: string;
+  expectedOutput?: string;
+  compileOutput?: string;
+};
+
 function TestCases({
   testCases = [],
   output = [],
   tab = "example",
 }: {
   testCases?: TestCase[];
-  output: any[];
+  output: OutputCase[];
   tab: "example" | "output";
 }) {
   const Colors = useColors();
@@ -34,14 +42,6 @@ function TestCases({
   }, [tab]);
 
   const currentTest = exampleCases[activeCase];
-
-  const parseInput = (input: string) => {
-    try {
-      return JSON.parse(input);
-    } catch {
-      return {};
-    }
-  };
 
   return (
     <div
@@ -64,7 +64,7 @@ function TestCases({
           <button
             key={tab}
             onClick={() => {
-              setMode(tab as any);
+              setMode(tab as "example" | "output");
               setActiveCase(0);
             }}
             className={`

@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 from typing import Optional
 from beanie import Document, PydanticObjectId
 from pydantic import Field
-from enums import ProblemStatus
 
 
 class ProblemSubmission(Document):

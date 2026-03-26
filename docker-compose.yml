@@ -4,6 +4,8 @@ services:
     container_name: bitwise-piston
     ports:
       - "2000:2000"
+    volumes:
+      - piston_data:/piston
     restart: unless-stopped
     privileged: true
 
@@ -145,3 +147,6 @@ services:
       MQ_CLIENT: amqp://guest:guest@rabbitmq/
     depends_on:
       - rabbitmq
+
+volumes:
+  piston_data:

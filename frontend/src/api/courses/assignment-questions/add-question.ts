@@ -5,7 +5,7 @@ type AddAssignmentQuestionPayload = {
   assignmentId: string;
   question: string;
   options: any[];
-  correctAnswer: string | string[];
+  correctAnswer: string[];
 };
 
 export const addAssignmentQuestion = async (
@@ -27,5 +27,6 @@ export const addAssignmentQuestion = async (
     return res.data;
   } catch (error) {
     toast.error("failed to add question");
+    throw error;
   }
 };

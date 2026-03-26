@@ -18,7 +18,7 @@ export const updateContentToSection = async (
   if (data.transcript) payload.transcript = data.transcript;
 
   const res = await axiosInstance.put(
-    `/api/v1/courses/update-content-to-section/${contentId}`,
+    `/api/course/update-content-by-sectionId/${contentId}`,
     payload,
   );
 

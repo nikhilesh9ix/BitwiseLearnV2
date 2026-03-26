@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
         `${process.env.BACKEND_URL}/api/v1/courses/add-course-enrollment/`,
         {
           batchId: body.batchId,
-          courses: courses[i],
+          courseId: courses[i],
         },
         {
           headers: {

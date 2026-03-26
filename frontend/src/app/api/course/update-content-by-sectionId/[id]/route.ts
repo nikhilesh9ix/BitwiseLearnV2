@@ -6,7 +6,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await context.params;
-    const data = await req.formData();
+    const data = await req.json();
     const token = req.cookies.get("token") || "";
     if (!token) throw new Error("Token not found");
     const cookieHeader = req.headers.get("cookie");
@@ -17,9 +17,10 @@ export async function PUT(
         method: "PUT",
         headers: {
           Cookie: cookieHeader || "",
+          "Content-Type": "application/json",
         },
         credentials: "include",
-        body: data,
+        body: JSON.stringify(data),
       },
     );
     // return NextResponse.json(res.json(),{status:res.status})

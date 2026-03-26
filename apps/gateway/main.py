@@ -6,7 +6,13 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
+def _parse_frontend_origins() -> list[str]:
+    raw_origins = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    return [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+
+
+FRONTEND_URLS = _parse_frontend_origins()
 
 # Service URL mapping — use env vars for Docker, defaults for local dev
 ROUTE_TABLE = {
@@ -41,7 +47,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=FRONTEND_URLS,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
