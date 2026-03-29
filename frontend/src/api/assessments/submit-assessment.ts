@@ -1,5 +1,4 @@
 import axiosInstance from "@/lib/axios";
-import { requestToBodyStream } from "next/dist/server/body-streams";
 import toast from "react-hot-toast";
 
 export const submitIndividualQuestion = async (
@@ -17,14 +16,17 @@ export const submitIndividualQuestion = async (
 export const submitTest = async (id: string, data: any) => {
   try {
     const request = await fetch("https://api.ipify.org?format=json");
-    const data = await request.json();
-    const clientIp = data.ip;
-    console.log(clientIp);
-    await axiosInstance.post("/api/assessments/submit/" + id, {
+    const ipPayload = await request.json();
+    const clientIp = ipPayload.ip;
+
+    const res = await axiosInstance.post("/api/assessments/submit/" + id, {
       ...data,
-      ip: clientIp,
+      studentIp: clientIp,
     });
+
+    return res.data;
   } catch (error) {
     toast.error("error submitting test");
+    throw error;
   }
 };

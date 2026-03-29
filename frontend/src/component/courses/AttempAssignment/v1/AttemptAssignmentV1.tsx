@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { getAssignmentById } from "@/api/courses/assignment/get-assignment-by-id";
 import { submitAssignment } from "@/api/courses/assignment/submit-assignment";
 import { useColors } from "@/component/general/(Color Manager)/useColors";
@@ -12,6 +11,10 @@ type AnswerMap = {
 };
 
 function AttemptAssignmentV1({ assignmentId }: { assignmentId: string }) {
+  const router = useRouter();
+  const params = useParams();
+  const Colors = useColors();
+
   const [assignment, setAssignment] = useState<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerMap>({});
@@ -21,13 +24,15 @@ function AttemptAssignmentV1({ assignmentId }: { assignmentId: string }) {
   const [loading, setLoading] = useState(false);
 
   const [showReviewScreen, setShowReviewScreen] = useState(false);
+  const [submissionReport, setSubmissionReport] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState(0); // ⏱ 10 minutes
 
   /* -------------------- LOAD ASSIGNMENT -------------------- */
   useEffect(() => {
     async function load() {
       const res = await getAssignmentById(assignmentId, null);
-      setAssignment(res.data);
+      const payload = res?.data ?? res ?? null;
+      setAssignment(payload);
       setCurrentIndex(0);
     }
     load();
@@ -51,6 +56,7 @@ function AttemptAssignmentV1({ assignmentId }: { assignmentId: string }) {
 
   /* -------------------- QUESTIONS -------------------- */
   const questions =
+    assignment?.questions ??
     assignment?.courseAssignemntQuestions ??
     assignment?.courseAssignmentQuestions ??
     [];
@@ -83,14 +89,13 @@ function AttemptAssignmentV1({ assignmentId }: { assignmentId: string }) {
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
   }
-  const router = useRouter();
-  const params = useParams();
+
   /* -------------------- SUBMIT -------------------- */
   async function handleFinalSubmit() {
     const payload = questions
       .filter((q: any) => answers[q.id])
       .map((q: any) => ({
-        questionId: q.id,
+        question_id: q.id,
         answer: answers[q.id],
       }));
     console.log(payload);
@@ -102,14 +107,73 @@ function AttemptAssignmentV1({ assignmentId }: { assignmentId: string }) {
 
     setLoading(true);
 
-    await submitAssignment(assignmentId, payload);
-    setLoading(false);
+    try {
+      const res = await submitAssignment(assignmentId, payload);
+      const report = res?.data?.report ?? res?.report ?? null;
+      setSubmissionReport(report);
+      setShowReviewScreen(false);
+    } catch (error: any) {
+      const report =
+        error?.response?.data?.data?.report ??
+        error?.response?.data?.report ??
+        null;
 
-    router.push(`/courses/${params.id}`);
-    setShowReviewScreen(false);
+      if (report) {
+        setSubmissionReport(report);
+        setShowReviewScreen(false);
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const Colors = useColors();
+  if (submissionReport) {
+    return (
+      <div className={`p-8 max-w-2xl mx-auto ${Colors.text.primary}`}>
+        <h2 className={`text-2xl font-semibold mb-6 ${Colors.text.special}`}>
+          Assignment Report
+        </h2>
+
+        <div className={`${Colors.background.primary} rounded-lg p-6 space-y-3`}>
+          <div className="flex justify-between text-sm">
+            <span>Assignment</span>
+            <span className="font-medium">{submissionReport.assignmentName}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Total Questions</span>
+            <span className="font-medium">{submissionReport.totalQuestions ?? 0}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Answered Questions</span>
+            <span className="font-medium">{submissionReport.answeredQuestions ?? 0}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Correct Answers</span>
+            <span className="font-medium">{submissionReport.correctAnswers ?? 0}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Marks</span>
+            <span className="font-medium">
+              {submissionReport.obtainedMarks ?? 0} / {submissionReport.totalMarks ?? 0}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Percentage</span>
+            <span className="font-medium">{submissionReport.percentage ?? 0}%</span>
+          </div>
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={() => router.push(`/courses/${params.id}`)}
+            className={`px-4 py-2 rounded ${Colors.background.special} ${Colors.text.primary}`}
+          >
+            Back to Course
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   /* -------------------- REVIEW SCREEN -------------------- */
   if (showReviewScreen) {
@@ -236,7 +300,10 @@ function AttemptAssignmentV1({ assignmentId }: { assignmentId: string }) {
           </p>
 
           <div className="space-y-3">
-            {currentQuestion.options.map((opt: string) => {
+            {(Array.isArray(currentQuestion.options)
+              ? currentQuestion.options
+              : []
+            ).map((opt: string) => {
               const selected = answers[currentQuestion.id]?.includes(opt);
 
               return (

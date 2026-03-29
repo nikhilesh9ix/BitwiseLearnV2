@@ -10,6 +10,7 @@ from models.institution import Institution
 from models.vendor import Vendor
 from models.teacher import Teacher
 from models.student import Student
+from models.batch import Batch
 from enums import UserType
 from services.email import send_otp_email
 
@@ -105,10 +106,24 @@ async def student_login(body: LoginRequest, response: Response):
     if not verify_password(body.password, student.login_password):
         return api_response(401, "Invalid email or password", error="Invalid credentials")
 
+    batch = await Batch.get(student.batch_id)
+    institute = await Institution.get(student.institute_id)
+
     access_token = generate_access_token(str(student.id), UserType.STUDENT)
     refresh_token = generate_refresh_token(str(student.id), UserType.STUDENT)
     resp = api_response(200, "Login successful", data={
         "id": str(student.id), "name": student.name, "email": student.email, "type": UserType.STUDENT,
+        "roll_number": student.roll_number,
+        "batch": {
+            "id": str(batch.id),
+            "batchname": batch.batchname,
+            "branch": getattr(batch, "branch", None),
+            "batchEndYear": getattr(batch, "batch_end_year", None),
+        } if batch else None,
+        "institution": {
+            "id": str(institute.id),
+            "name": institute.name,
+        } if institute else None,
         "tokens": {"access_token": access_token, "refresh_token": refresh_token}
     })
     _set_auth_cookies(resp, access_token, refresh_token)

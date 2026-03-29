@@ -14,5 +14,6 @@ export const publishCourse = async (courseId: string, stateFn?: any) => {
     return res.data;
   } catch (error) {
     toast.error("failed to publish course");
+    throw error;
   }
 };

@@ -14,5 +14,6 @@ export const updateAssessmentStatus = async (
     return res.data.data;
   } catch (error) {
     toast.error("error updating status");
+    throw error;
   }
 };

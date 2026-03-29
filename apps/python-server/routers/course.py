@@ -179,12 +179,18 @@ async def get_course_by_id(id: str, current_user: dict = Depends(get_current_use
     section_data = []
     for s in sections:
         contents = await CourseLearningContent.find(CourseLearningContent.section_id == s.id).to_list()
+        assignments = await CourseAssignment.find(CourseAssignment.section_id == s.id).to_list()
         content_data = [{
             "id": str(ct.id), "name": ct.name, "description": ct.description,
             "video_url": ct.video_url, "transcript": ct.transcript, "file": ct.file
         } for ct in contents]
+        assignment_data = [{
+            "id": str(a.id), "name": a.name, "description": a.description,
+            "instruction": a.instruction, "marks_per_question": a.marks_per_question
+        } for a in assignments]
         section_data.append({
-            "id": str(s.id), "name": s.name, "contents": content_data
+            "id": str(s.id), "name": s.name, "contents": content_data,
+            "assignments": assignment_data
         })
 
     return api_response(200, "Course fetched", data={
@@ -626,6 +632,40 @@ async def get_assignment_marks_by_course(id: str, current_user: dict = Depends(r
     return api_response(200, "Assignment marks", data=results)
 
 
+@router.get("/get-assignment-report/{id}")
+async def get_assignment_report(id: str, current_user: dict = Depends(require_roles(UserType.STUDENT))):
+    assignment = await CourseAssignment.get(PydanticObjectId(id))
+    if not assignment:
+        return api_response(404, "Assignment not found", error="Not found")
+
+    student_id = PydanticObjectId(current_user["id"])
+    questions = await CourseAssignmentQuestion.find(CourseAssignmentQuestion.assignment_id == assignment.id).to_list()
+    submissions = await CourseAssignmentSubmission.find(
+        CourseAssignmentSubmission.assignment_id == assignment.id,
+        CourseAssignmentSubmission.student_id == student_id,
+    ).to_list()
+
+    if not submissions:
+        return api_response(404, "Report not found", error="Not found")
+
+    obtained_marks = sum(s.marks_obtained or 0 for s in submissions)
+    total_marks = len(questions) * assignment.marks_per_question
+    percentage = round((obtained_marks / total_marks) * 100, 2) if total_marks > 0 else 0
+    latest_attempted_at = max((s.submitted_at for s in submissions), default=None)
+
+    return api_response(200, "Assignment report fetched", data={
+        "assignment_id": str(assignment.id),
+        "assignment_name": assignment.name,
+        "total_questions": len(questions),
+        "answered_questions": len(submissions),
+        "correct_answers": sum(1 for s in submissions if s.is_correct),
+        "obtained_marks": obtained_marks,
+        "total_marks": total_marks,
+        "percentage": percentage,
+        "attempted_at": latest_attempted_at.isoformat() if latest_attempted_at else None,
+    })
+
+
 @router.post("/submit-course-assignment/{id}")
 async def submit_course_assignment(id: str, body: SubmitAssignmentRequest, current_user: dict = Depends(require_roles(UserType.STUDENT))):
     assignment = await CourseAssignment.get(PydanticObjectId(id))
@@ -633,40 +673,90 @@ async def submit_course_assignment(id: str, body: SubmitAssignmentRequest, curre
         return api_response(404, "Assignment not found", error="Not found")
 
     student_id = PydanticObjectId(current_user["id"])
+
+    existing_any = await CourseAssignmentSubmission.find_one(
+        CourseAssignmentSubmission.assignment_id == assignment.id,
+        CourseAssignmentSubmission.student_id == student_id,
+    )
+    if existing_any:
+        questions = await CourseAssignmentQuestion.find(CourseAssignmentQuestion.assignment_id == assignment.id).to_list()
+        existing_submissions = await CourseAssignmentSubmission.find(
+            CourseAssignmentSubmission.assignment_id == assignment.id,
+            CourseAssignmentSubmission.student_id == student_id,
+        ).to_list()
+        obtained_marks = sum(s.marks_obtained or 0 for s in existing_submissions)
+        total_marks = len(questions) * assignment.marks_per_question
+        percentage = round((obtained_marks / total_marks) * 100, 2) if total_marks > 0 else 0
+        latest_attempted_at = max((s.submitted_at for s in existing_submissions), default=None)
+
+        return api_response(
+            409,
+            "Assignment already attempted",
+            data={
+                "report": {
+                    "assignment_id": str(assignment.id),
+                    "assignment_name": assignment.name,
+                    "total_questions": len(questions),
+                    "answered_questions": len(existing_submissions),
+                    "correct_answers": sum(1 for s in existing_submissions if s.is_correct),
+                    "obtained_marks": obtained_marks,
+                    "total_marks": total_marks,
+                    "percentage": percentage,
+                    "attempted_at": latest_attempted_at.isoformat() if latest_attempted_at else None,
+                }
+            },
+            error="Only one attempt is allowed",
+        )
+
     results = []
+    question_map = {
+        str(q.id): q
+        for q in await CourseAssignmentQuestion.find(
+            CourseAssignmentQuestion.assignment_id == assignment.id
+        ).to_list()
+    }
+
     for ans in body.answers:
-        q_id = PydanticObjectId(ans["question_id"])
-        question = await CourseAssignmentQuestion.get(q_id)
+        question_id = ans.get("question_id")
+        if not question_id:
+            continue
+
+        question = question_map.get(str(question_id))
         if not question:
             continue
 
+        q_id = PydanticObjectId(str(question.id))
         student_answer = ans.get("answer", [])
         is_correct = sorted(student_answer) == sorted(question.correct_answer)
         marks = assignment.marks_per_question if is_correct else 0
 
-        # Upsert
-        existing = await CourseAssignmentSubmission.find_one(
-            CourseAssignmentSubmission.question_id == q_id,
-            CourseAssignmentSubmission.student_id == student_id,
-            CourseAssignmentSubmission.assignment_id == assignment.id,
+        sub = CourseAssignmentSubmission(
+            question_id=q_id, student_id=student_id, answer=student_answer,
+            assignment_id=assignment.id, marks_obtained=marks, is_correct=is_correct,
         )
-        if existing:
-            existing.answer = student_answer
-            existing.is_correct = is_correct
-            existing.marks_obtained = marks
-            existing.submitted_at = datetime.now(timezone.utc)
-            existing.updated_at = datetime.now(timezone.utc)
-            await existing.save()
-        else:
-            sub = CourseAssignmentSubmission(
-                question_id=q_id, student_id=student_id, answer=student_answer,
-                assignment_id=assignment.id, marks_obtained=marks, is_correct=is_correct,
-            )
-            await sub.insert()
+        await sub.insert()
 
         results.append({"question_id": str(q_id), "is_correct": is_correct, "marks": marks})
 
-    return api_response(200, "Assignment submitted", data=results)
+    total_questions = len(question_map)
+    total_marks = total_questions * assignment.marks_per_question
+    obtained_marks = sum(r["marks"] for r in results)
+    percentage = round((obtained_marks / total_marks) * 100, 2) if total_marks > 0 else 0
+
+    return api_response(200, "Assignment submitted", data={
+        "results": results,
+        "report": {
+            "assignment_id": str(assignment.id),
+            "assignment_name": assignment.name,
+            "total_questions": total_questions,
+            "answered_questions": len(results),
+            "correct_answers": sum(1 for r in results if r["is_correct"]),
+            "obtained_marks": obtained_marks,
+            "total_marks": total_marks,
+            "percentage": percentage,
+            "attempted_at": datetime.now(timezone.utc).isoformat(),
+        },
+    })
 
 
 # ========== COURSE PROGRESS ==========
@@ -808,6 +898,20 @@ async def get_course_enrollments_by_batch(id: str, current_user: dict = Depends(
 async def add_course_enrollment(body: AddEnrollmentRequest, current_user: dict = Depends(not_student)):
     course_id = PydanticObjectId(body.course_id)
     batch_id = PydanticObjectId(body.batch_id)
+    course = await Course.get(course_id)
+    if not course:
+        return api_response(404, "Course not found", error="Not found")
+
+    if course.is_published != CourseStatus.PUBLISHED:
+        return api_response(
+            400,
+            "Publish course before assigning it to a batch",
+            error="Course is not published",
+        )
+
+    batch = await Batch.get(batch_id)
+    if not batch:
+        return api_response(404, "Batch not found", error="Not found")
 
     existing = await CourseEnrollment.find_one(
         CourseEnrollment.course_id == course_id,

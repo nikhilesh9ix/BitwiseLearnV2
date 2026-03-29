@@ -12,11 +12,14 @@ function V1AdminProblem() {
   const [data, setData] = useState({});
   const [testMode, setTestMode] = useState(false);
   const Colors = useColors();
+
   useEffect(() => {
-    if (param) {
-      getAdminProblemData(setData, param.id as string);
+    const problemId = param?.id;
+    if (typeof problemId === "string" && problemId.length > 0) {
+      getAdminProblemData(setData, problemId);
     }
-  }, []);
+  }, [param?.id]);
+
   return (
     <div className={`flex h-screen gap-4 ${Colors.background.primary}`}>
       <ProblemDescrption

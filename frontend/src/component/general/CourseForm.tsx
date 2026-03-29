@@ -56,7 +56,7 @@ function CourseForm({ batchId }: { batchId: string }) {
 
   useEffect(() => {
     async function handleLoad() {
-      const data: Course[] = await getAllCourses(false);
+      const data: Course[] = await getAllCourses(true);
       setAllCourses(data);
     }
     handleLoad();
@@ -65,6 +65,9 @@ function CourseForm({ batchId }: { batchId: string }) {
   return (
     <div className={`space-y-4 ${Colors.text.primary}`}>
       <h2 className="text-lg font-semibold">Select Courses</h2>
+      <p className={`text-sm ${Colors.text.secondary}`}>
+        Only published courses can be assigned to a batch.
+      </p>
 
       {/* Scrollable flex container */}
       <div
@@ -111,7 +114,7 @@ function CourseForm({ batchId }: { batchId: string }) {
         className={`px-4 py-2 cursor-pointer rounded disabled:opacity-50 disabled:cursor-not-allowed ${Colors.background.special} ${Colors.hover.special} ${Colors.text.primary}`}
         onClick={handleSubmit}
       >
-        {loading ? "Enrolling..." : "Enroll Institution"}
+        {loading ? "Assigning..." : "Assign Courses"}
       </button>
     </div>
   );

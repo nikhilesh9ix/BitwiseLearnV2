@@ -50,7 +50,7 @@ export default function AssignmentV2({
       durationInMinutes: totalMarks * 2,
       status: "LIVE",
       //@ts-ignore
-      isAttempted: map[a.id] !== undefined ? map[a.id] : map[a.id],
+      isAttempted: Boolean(map[a.id]),
     };
   });
 

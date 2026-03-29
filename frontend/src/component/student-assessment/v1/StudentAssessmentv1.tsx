@@ -10,6 +10,7 @@ import {
 } from "@/api/assessments/get-all-assessments";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import axiosInstance from "@/lib/axios";
 
 // colors ------------------------------------------------------------------
 import { useColors } from "@/component/general/(Color Manager)/useColors";
@@ -222,10 +223,16 @@ const StudentAssesmentv1 = () => {
     try {
       setLoading(true);
       let normalizedData: any[] = [];
-      if (!studentBatchId) return;
-      await getAssessmentsByBatch((data: any) => {
-        normalizedData = data;
-      }, studentBatchId as any);
+
+      if (studentBatchId) {
+        await getAssessmentsByBatch((data: any) => {
+          normalizedData = data;
+        }, studentBatchId as any);
+      } else {
+        // Fallback for older sessions where student batch is not in persisted store.
+        const dashboardRes = await axiosInstance.get("/api/v1/students/dashboard");
+        normalizedData = dashboardRes.data?.data?.assessments || [];
+      }
 
       //@ts-ignore
       normalizedData = normalizedData.map((a: any) => ({

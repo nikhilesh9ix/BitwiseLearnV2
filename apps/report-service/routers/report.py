@@ -9,7 +9,12 @@ from shared.models.batch import Batch
 from shared.models.teacher import Teacher
 from shared.models.student import Student
 from shared.models.course import Course
+from shared.models.course_section import CourseSection
+from shared.models.course_content import CourseLearningContent
+from shared.models.course_assignment import CourseAssignment
+from shared.models.course_assignment_submission import CourseAssignmentSubmission
 from shared.models.course_enrollment import CourseEnrollment
+from shared.models.course_progress import CourseProgress
 from shared.models.assessment import Assessment
 from shared.models.assessment_submission import AssessmentSubmission
 from shared.services.queue import publish_message
@@ -17,6 +22,14 @@ from shared.enums import ReportStatus
 import math
 
 router = APIRouter(prefix="/api/v1/reports", tags=["Reports"])
+
+
+def _group_by_student(records: list, attr_name: str) -> dict[str, list]:
+    grouped: dict[str, list] = {}
+    for record in records:
+        student_id = str(getattr(record, attr_name))
+        grouped.setdefault(student_id, []).append(record)
+    return grouped
 
 
 @router.get("/get-stats-count")
@@ -96,31 +109,82 @@ async def get_course_report(
     if not course:
         return api_response(404, "Course not found", error="Not found")
 
-    total = await CourseEnrollment.find(
-        CourseEnrollment.course_id == course.id,
-        CourseEnrollment.batch_id == PydanticObjectId(batch_id),
-    ).count()
+    batch_oid = PydanticObjectId(batch_id)
+    batch = await Batch.get(batch_oid)
+    if not batch:
+        return api_response(404, "Batch not found", error="Not found")
 
-    enrollments = await CourseEnrollment.find(
-        CourseEnrollment.course_id == course.id,
-        CourseEnrollment.batch_id == PydanticObjectId(batch_id),
-    ).skip((page - 1) * limit).limit(limit).to_list()
+    total = await Student.find(Student.batch_id == batch_oid).count()
+    students = await Student.find(Student.batch_id == batch_oid).skip(
+        (page - 1) * limit
+    ).limit(limit).to_list()
+
+    student_ids = [student.id for student in students]
+    sections = await CourseSection.find(CourseSection.course_id == course.id).to_list()
+    section_ids = [section.id for section in sections]
+
+    contents = []
+    assignments = []
+    if section_ids:
+        contents = await CourseLearningContent.find(
+            {"section_id": {"$in": section_ids}}
+        ).to_list()
+        assignments = await CourseAssignment.find(
+            {"section_id": {"$in": section_ids}}
+        ).to_list()
+
+    content_ids = [content.id for content in contents]
+    assignment_ids = [assignment.id for assignment in assignments]
+
+    progresses = []
+    submissions = []
+    if student_ids and content_ids:
+        progresses = await CourseProgress.find(
+            {"student_id": {"$in": student_ids}, "content_id": {"$in": content_ids}}
+        ).to_list()
+    if student_ids and assignment_ids:
+        submissions = await CourseAssignmentSubmission.find(
+            {
+                "student_id": {"$in": student_ids},
+                "assignment_id": {"$in": assignment_ids},
+            }
+        ).to_list()
+
+    progresses_by_student = _group_by_student(progresses, "student_id")
+    submissions_by_student = _group_by_student(submissions, "student_id")
 
     data = []
-    for e in enrollments:
-        batch = await Batch.get(e.batch_id) if e.batch_id else None
+    for student in students:
+        student_id = str(student.id)
+        student_progresses = progresses_by_student.get(student_id, [])
+        student_submissions = submissions_by_student.get(student_id, [])
         data.append({
-            "id": str(e.id),
-            "batch_id": str(e.batch_id),
-            "batch_name": batch.name if batch else "Unknown",
-            "created_at": e.created_at.isoformat(),
+            "id": student_id,
+            "name": student.name,
+            "rollNumber": student.roll_number,
+            "courseProgresses": [
+                {"id": str(progress.id), "contentId": str(progress.content_id)}
+                for progress in student_progresses
+            ],
+            "courseAssignemntSubmissions": [
+                {"id": str(submission.id), "assignmentId": str(submission.assignment_id)}
+                for submission in student_submissions
+            ],
+            "courseAssignmentSubmissions": [
+                {"id": str(submission.id), "assignmentId": str(submission.assignment_id)}
+                for submission in student_submissions
+            ],
         })
 
     return api_response(200, "Course report fetched", data={
-        "enrollments": data,
-        "total": total,
+        "students": data,
+        "batch": {"id": str(batch.id), "batchname": batch.batchname},
+        "course": {"id": str(course.id), "name": course.name},
+        "total_students": total,
         "page": page,
         "total_pages": math.ceil(total / limit) if total > 0 else 1,
+        "totalCourseTopics": len(content_ids),
+        "totalAssignments": len(assignment_ids),
     })
 
 

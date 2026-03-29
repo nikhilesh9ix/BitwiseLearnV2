@@ -11,7 +11,7 @@ export const URL_ACCESS_MAP: Record<string, string[]> = {
     "/problems",
     "/problem/:id",
     "/courses/:id/studyMode",
-    "/courses/:id/assignment/:id/attempt",
+    "/courses/:id/assignment/:assignmentId/attempt",
     "/courses/:id/assignment/:assignmentId",
     "/courses/:id",
     "/courses",

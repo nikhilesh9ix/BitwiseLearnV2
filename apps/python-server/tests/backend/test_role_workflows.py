@@ -118,6 +118,55 @@ def test_institution_can_manage_batches(client, monkeypatch, auth_header_for, mo
     assert response.status_code == 201
 
 
+def test_admin_cannot_assign_unpublished_course_to_batch(
+    client,
+    monkeypatch,
+    auth_header_for,
+    mock_user_presence,
+):
+    admin_id = "507f1f77bcf86cd799439010"
+
+    class _Course:
+        @staticmethod
+        async def get(*_args, **_kwargs):
+            return SimpleNamespace(
+                id="507f1f77bcf86cd799439011",
+                is_published="NOT_PUBLISHED",
+            )
+
+    class _Batch:
+        @staticmethod
+        async def get(*_args, **_kwargs):
+            return SimpleNamespace(id="507f1f77bcf86cd799439012")
+
+    class _Enrollment:
+        course_id = "course_id"
+        batch_id = "batch_id"
+
+        @staticmethod
+        async def find_one(*_args, **_kwargs):
+            return None
+
+        def __init__(self, **_kwargs):
+            raise AssertionError("Enrollment should not be created for unpublished courses")
+
+    monkeypatch.setattr("routers.course.Course", _Course)
+    monkeypatch.setattr("routers.course.Batch", _Batch)
+    monkeypatch.setattr("routers.course.CourseEnrollment", _Enrollment)
+
+    response = client.post(
+        "/api/v1/courses/add-course-enrollment/",
+        json={
+            "courseId": "507f1f77bcf86cd799439011",
+            "batchId": "507f1f77bcf86cd799439012",
+        },
+        headers=auth_header_for(admin_id, "ADMIN"),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["error"] == "Course is not published"
+
+
 def test_vendor_can_view_assigned_institutions(client, monkeypatch, auth_header_for, mock_user_presence):
     vendor_id = "507f1f77bcf86cd799439010"
 

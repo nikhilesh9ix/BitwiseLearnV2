@@ -9,7 +9,12 @@ from shared.models.batch import Batch
 from shared.models.teacher import Teacher
 from shared.models.student import Student
 from shared.models.course import Course
+from shared.models.course_section import CourseSection
+from shared.models.course_content import CourseLearningContent
+from shared.models.course_assignment import CourseAssignment
+from shared.models.course_assignment_submission import CourseAssignmentSubmission
 from shared.models.course_enrollment import CourseEnrollment
+from shared.models.course_progress import CourseProgress
 from shared.models.assessment import Assessment
 from shared.models.assessment_submission import AssessmentSubmission
 
@@ -17,7 +22,9 @@ settings = get_settings()
 
 SERVICE_MODELS = [
     User, Institution, Vendor, Batch, Teacher, Student,
-    Course, CourseEnrollment, Assessment, AssessmentSubmission,
+    Course, CourseSection, CourseLearningContent, CourseAssignment,
+    CourseAssignmentSubmission, CourseEnrollment, CourseProgress,
+    Assessment, AssessmentSubmission,
 ]
 
 

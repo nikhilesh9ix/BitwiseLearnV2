@@ -5,6 +5,7 @@ export async function POST(req: NextRequest) {
   try {
     const backendUrl = process.env.BACKEND_URL;
     const data = await req.json();
+    const page = Math.max(1, Number(data.pageNumber ?? 0) + 1);
 
     if (!backendUrl) {
       return NextResponse.json(
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
     if (!token) throw new Error("Token not found");
     const cookieHeader = req.headers.get("cookie");
     const response = await axiosInstance.get(
-      `${backendUrl}/api/v1/reports/assessment-report/${data.assessmentId}?page=${data.pageNumber}`,
+      `${backendUrl}/api/v1/reports/assessment-report/${data.assessmentId}?page=${page}`,
       {
         headers: {
           Cookie: cookieHeader || "",

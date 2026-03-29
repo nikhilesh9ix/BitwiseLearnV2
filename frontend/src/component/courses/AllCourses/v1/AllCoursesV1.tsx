@@ -171,37 +171,69 @@ export default function AllCoursesV1() {
     async function loadCourses() {
       try {
         setLoading(true);
-        let res;
+        let res: any[] = [];
         if (adminInfo?.data?.id && adminInfo.data.id.length > 0) {
           res = await getAllCourses();
         } else {
-          res = await getStudentCourses();
+          try {
+            res = await getStudentCourses();
+          } catch {
+            res = [];
+          }
+
+          if (!Array.isArray(res) || res.length === 0) {
+            try {
+              const dashboardRes = await axiosInstance.get("/api/v1/students/dashboard");
+              res = dashboardRes.data?.data?.courses || [];
+            } catch {
+              res = [];
+            }
+          }
+
+          if (!Array.isArray(res) || res.length === 0) {
+            try {
+              const listedRes = await axiosInstance.get("/api/v1/courses/listed-courses");
+              res = listedRes.data?.data || [];
+            } catch {
+              res = [];
+            }
+          }
         }
-        const mappedCourses: Course[] = res.map((course: any) => ({
-          id: course.id,
-          name: course.name,
-          isPublished: course.isPublished,
-          description: course.description,
-          level: normalizeLevel(course.level),
+
+        const normalizedRes = Array.isArray(res)
+          ? res
+          : Array.isArray((res as any)?.data)
+            ? (res as any).data
+            : [];
+
+        const mappedCourses: Course[] = normalizedRes.map((course: any) => ({
+          id: course.id ?? "",
+          name: course.name ?? "",
+          isPublished: course.isPublished ?? course.is_published ?? "PUBLISHED",
+          description: course.description ?? "No description available",
+          level: normalizeLevel(course.level ?? "BASIC"),
           duration: course.duration,
           thumbnail: course.thumbnail,
-          instructorName: course.instructorName,
+          instructorName: course.instructorName ?? course.instructor_name ?? "Instructor",
         }));
 
-        const filteredCourses = mappedCourses.filter(
-          (course) => course.isPublished === "PUBLISHED",
-        );
+        const filteredCourses = mappedCourses.filter((course) => {
+          if (adminInfo?.data?.id && adminInfo.data.id.length > 0) {
+            return true;
+          }
+          return course.isPublished === "PUBLISHED";
+        });
 
         setCourses(filteredCourses);
       } catch (error) {
-        // console.error("Failed to load courses", error);
+        setCourses([]);
       } finally {
         setLoading(false);
       }
     }
 
     loadCourses();
-  }, []);
+  }, [adminInfo?.data?.id]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

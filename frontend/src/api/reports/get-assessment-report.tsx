@@ -8,12 +8,14 @@ export async function getStudentData(
   setStudentData: (data: any) => void,
 ) {
   try {
-    const data = await axiosInstance.post("/api/reports/assessment-report/", {
+    const response = await axiosInstance.post("/api/reports/assessment-report/", {
       assessmentId,
       pageNumber,
     });
-    setStudentData(data.data.data);
+    const payload = response.data;
+    setStudentData(Array.isArray(payload?.submissions) ? payload.submissions : []);
   } catch (error) {
-    toast.error("failed to get data");
+    toast.error("Failed to load assessment report");
+    setStudentData([]);
   }
 }

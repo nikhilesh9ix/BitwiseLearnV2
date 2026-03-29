@@ -8,15 +8,17 @@ export async function getStudentData(
   setStudentData: (data: any) => void,
 ) {
   try {
-    const data = await axiosInstance.post("/api/reports/course-report/", {
+    const response = await axiosInstance.post("/api/reports/course-report/", {
       courseId,
       batchId,
       pageNumber,
     });
-    setStudentData(data.data.data);
+    const payload = response.data;
+    setStudentData(Array.isArray(payload?.students) ? payload.students : []);
 
-    return data.data.totalCourseTopics;
+    return payload?.totalCourseTopics ?? 0;
   } catch (error) {
-    toast.error("failed to create problem");
+    toast.error("Failed to load course report");
+    setStudentData([]);
   }
 }

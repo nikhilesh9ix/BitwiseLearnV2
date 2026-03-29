@@ -123,11 +123,12 @@ export default function AssignmentCard({
                 </button>
 
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    setOpen(false);
                     router.push(
-                      `/courses/${courseId}/assignment/${assignment.id}`,
-                    )
-                  }
+                      `/courses/${courseId}/assignment/${assignment.id}/attempt`,
+                    );
+                  }}
                   className={`
     px-4 py-2 rounded-md text-sm font-medium
     ${Colors.background.special}

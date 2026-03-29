@@ -7,6 +7,7 @@ import { useStudent } from "@/store/studentStore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { getStudentCourses } from "@/api/courses/course/get-all-courses";
+import axiosInstance from "@/lib/axios";
 
 /* ---------------- TYPES ---------------- */
 
@@ -85,13 +86,49 @@ export default function HeroSection() {
   const batchID = studentData?.batch?.id;
 
   useEffect(() => {
-    if (!batchID) return;
-
     const fetchCourses = async () => {
+      let data: unknown[] = [];
+
       try {
         setLoading(true);
-        // const data = await allBatchCourses(batchID);
-        const data = await getStudentCourses();
+        // For older persisted sessions, hydrate missing student profile fields.
+        if (!batchID) {
+          try {
+            await axiosInstance.get("/api/v1/students/dashboard");
+          } catch {
+            // Non-fatal: continue with other sources.
+          }
+        }
+
+        // Primary source: student course endpoint (published, enrolled courses).
+        try {
+          data = await getStudentCourses();
+        } catch {
+          data = [];
+        }
+
+        // Fallback source: dashboard payload for environments where publish/enrollment
+        // state is temporarily inconsistent but student has course linkage.
+        if (!Array.isArray(data) || data.length === 0) {
+          try {
+            const dashboardRes = await axiosInstance.get("/api/v1/students/dashboard");
+            data = dashboardRes.data?.data?.courses || [];
+          } catch {
+            data = [];
+          }
+        }
+
+        // Last fallback: public listed courses to avoid blank student dashboard
+        // when enrollment mapping is temporarily missing.
+        if (!Array.isArray(data) || data.length === 0) {
+          try {
+            const listedRes = await axiosInstance.get("/api/v1/courses/listed-courses");
+            data = listedRes.data?.data || [];
+          } catch {
+            data = [];
+          }
+        }
+
         const normalized: Course[] = data.map((course: unknown) => {
           const current = course as {
             level?: string;
@@ -99,24 +136,28 @@ export default function HeroSection() {
             name?: string;
             description?: string;
             isPublished?: string;
+            is_published?: string;
             duration?: string;
             thumbnail?: string | null;
             instructorName?: string;
+            instructor_name?: string;
           };
 
           return {
             id: current.id ?? "",
             name: current.name ?? "",
-            description: current.description ?? "",
-            isPublished: current.isPublished ?? "",
+            description: current.description ?? "No description available",
+            isPublished: current.isPublished ?? current.is_published ?? "PUBLISHED",
             level: normalizeLevel(current.level ?? "BASIC"),
             duration: current.duration,
             thumbnail: current.thumbnail,
-            instructorName: current.instructorName ?? "",
+            instructorName: current.instructorName ?? current.instructor_name ?? "Instructor",
           };
         });
 
         setCourses(normalized);
+      } catch {
+        setCourses([]);
       } finally {
         setLoading(false);
       }

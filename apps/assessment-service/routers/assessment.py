@@ -278,10 +278,38 @@ async def submit_assessment(id: str, body: SubmitAssessmentRequest, current_user
         return api_response(404, "Assessment not found", error="Not found")
 
     student_id = PydanticObjectId(current_user["id"])
+    sections = await AssessmentSection.find(AssessmentSection.assessment_id == assessment.id).to_list()
+    total_questions = 0
+    total_max_marks = 0
+    for sec in sections:
+        sec_questions = await AssessmentQuestion.find(AssessmentQuestion.section_id == sec.id).to_list()
+        total_questions += len(sec_questions)
+        total_max_marks += sum(q.max_marks or 0 for q in sec_questions)
+
     submission = await AssessmentSubmission.find_one(
         AssessmentSubmission.assessment_id == assessment.id,
         AssessmentSubmission.student_id == student_id,
     )
+
+    if submission and submission.is_submitted:
+        obtained_marks = submission.total_marks or 0
+        percentage = round((obtained_marks / total_max_marks) * 100, 2) if total_max_marks > 0 else 0
+        return api_response(
+            409,
+            "Assessment already submitted",
+            data={
+                "report": {
+                    "assessment_id": str(assessment.id),
+                    "assessment_name": assessment.name,
+                    "total_questions": total_questions,
+                    "obtained_marks": obtained_marks,
+                    "total_marks": total_max_marks,
+                    "percentage": percentage,
+                    "submitted_at": submission.submitted_at.isoformat() if submission.submitted_at else None,
+                }
+            },
+            error="Only one attempt is allowed",
+        )
 
     # Tally marks from question submissions
     q_submissions = await AssessmentQuestionSubmission.find(
@@ -311,8 +339,56 @@ async def submit_assessment(id: str, body: SubmitAssessmentRequest, current_user
         )
         await submission.insert()
 
+    percentage = round((total_marks / total_max_marks) * 100, 2) if total_max_marks > 0 else 0
+
     return api_response(200, "Assessment submitted", data={
-        "submission_id": str(submission.id), "total_marks": total_marks
+        "submission_id": str(submission.id),
+        "total_marks": total_marks,
+        "report": {
+            "assessment_id": str(assessment.id),
+            "assessment_name": assessment.name,
+            "total_questions": total_questions,
+            "obtained_marks": total_marks,
+            "total_marks": total_max_marks,
+            "percentage": percentage,
+            "submitted_at": submission.submitted_at.isoformat() if submission.submitted_at else None,
+        },
+    })
+
+
+@router.get("/get-student-assessment-report/{id}")
+async def get_student_assessment_report(id: str, current_user: dict = Depends(require_roles(UserType.STUDENT))):
+    assessment = await Assessment.get(PydanticObjectId(id))
+    if not assessment:
+        return api_response(404, "Assessment not found", error="Not found")
+
+    student_id = PydanticObjectId(current_user["id"])
+    submission = await AssessmentSubmission.find_one(
+        AssessmentSubmission.assessment_id == assessment.id,
+        AssessmentSubmission.student_id == student_id,
+    )
+    if not submission or not submission.is_submitted:
+        return api_response(404, "Report not found", error="Not found")
+
+    sections = await AssessmentSection.find(AssessmentSection.assessment_id == assessment.id).to_list()
+    total_questions = 0
+    total_max_marks = 0
+    for sec in sections:
+        sec_questions = await AssessmentQuestion.find(AssessmentQuestion.section_id == sec.id).to_list()
+        total_questions += len(sec_questions)
+        total_max_marks += sum(q.max_marks or 0 for q in sec_questions)
+
+    obtained_marks = submission.total_marks or 0
+    percentage = round((obtained_marks / total_max_marks) * 100, 2) if total_max_marks > 0 else 0
+
+    return api_response(200, "Assessment report fetched", data={
+        "assessment_id": str(assessment.id),
+        "assessment_name": assessment.name,
+        "total_questions": total_questions,
+        "obtained_marks": obtained_marks,
+        "total_marks": total_max_marks,
+        "percentage": percentage,
+        "submitted_at": submission.submitted_at.isoformat() if submission.submitted_at else None,
     })
 
 
@@ -411,6 +487,7 @@ async def submit_assessment_question(id: str, body: SubmitAssessmentQuestionRequ
 # ========== ASSESSMENT REPORT ==========
 
 @router.post("/assignment-report/{id}")
+@router.post("/assessment-report/{id}")
 async def trigger_assessment_report(id: str, current_user: dict = Depends(not_student)):
     assessment = await Assessment.get(PydanticObjectId(id))
     if not assessment:

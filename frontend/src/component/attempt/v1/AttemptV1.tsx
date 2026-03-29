@@ -9,6 +9,8 @@ import toast from "react-hot-toast";
 import { Wifi } from "lucide-react";
 
 import { getAssessmentById } from "@/api/assessments/get-assessment-by-id";
+import { getAssessmentSections } from "@/api/assessments/get-all-sections";
+import { getSectionQuestions } from "@/api/assessments/get-section-questions";
 import { getProblemData } from "@/api/problems/get-individual-problem";
 
 import ConfirmSubmit from "./ConfirmSubmit";
@@ -19,7 +21,6 @@ import { useTabSwitchCounter } from "./Proctoring/TabSwitchCounter";
 import { useAntiCheatControls } from "./Proctoring/AntiCheat";
 import { AttemptMode } from "./types";
 import CodeRightSection from "./CodeRightSection";
-import { data } from "framer-motion/client";
 import {
   submitIndividualQuestion,
   submitTest,
@@ -42,15 +43,17 @@ export default function AttemptV1({
   const router = useRouter();
 
   function normalizeAssessmentData(raw: any) {
+    const rawSections = Array.isArray(raw?.sections) ? raw.sections : [];
+
     return {
-      id: raw.id,
-      name: raw.name,
-      instructions: raw.instruction,
-      sections: raw.sections.map((section: any) => ({
+      id: raw?.id,
+      name: raw?.name,
+      instructions: raw?.instruction,
+      sections: rawSections.map((section: any) => ({
         id: section.id,
         name: section.name,
-        type: section.assessmentType,
-        questions: section.questions.map((q: any) => ({
+        type: section.assessmentType ?? section.assessment_type ?? section.type,
+        questions: (Array.isArray(section.questions) ? section.questions : []).map((q: any) => ({
           id: q.id,
           question: q.question,
           options: q.options ?? [],
@@ -77,6 +80,7 @@ export default function AttemptV1({
 
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [submissionReport, setSubmissionReport] = useState<any>(null);
   const intentionalExitRef = useRef(false);
   const [autoSubmit, setAutoSubmit] = useState(false);
 
@@ -179,8 +183,29 @@ export default function AttemptV1({
       try {
         setLoading(true);
         const res = await getAssessmentById(id);
-        setAttemptData(normalizeAssessmentData(res.data));
-        setAutoSubmit(res.data.autoSubmit);
+        const assessmentData = res?.data;
+        if (!assessmentData?.id) {
+          throw new Error("Assessment not found");
+        }
+
+        const sections = await getAssessmentSections(id);
+        const sectionsWithQuestions = await Promise.all(
+          (Array.isArray(sections) ? sections : []).map(async (section: any) => {
+            const questions = await getSectionQuestions(section.id);
+            return {
+              ...section,
+              questions: Array.isArray(questions) ? questions : [],
+            };
+          }),
+        );
+
+        setAttemptData(
+          normalizeAssessmentData({
+            ...assessmentData,
+            sections: sectionsWithQuestions,
+          }),
+        );
+        setAutoSubmit(Boolean(assessmentData.autoSubmit));
       } catch {
         toast.error("Assessment not found");
       } finally {
@@ -317,9 +342,59 @@ useEffect(() => {
     await handleCodeQuestion(question.id, code, language);
   }
   const handleSubmitTest = async () => {
-    await submitTest(id, { tabSwitchCount: tabSwitchCount });
-    router.push("/assessments");
+    const res = await submitTest(id, { tabSwitchCount });
+    const report = res?.data?.report ?? res?.report ?? null;
+    setSubmissionReport(report);
+    setShowSubmitConfirm(false);
   };
+
+  if (submissionReport) {
+    return (
+      <div className={`${Colors.background.primary} min-h-screen p-8`}>
+        <div className="max-w-2xl mx-auto">
+          <h2 className={`text-2xl font-semibold mb-6 ${Colors.text.special}`}>
+            Assessment Report
+          </h2>
+
+          <div className={`${Colors.background.secondary} rounded-lg p-6 space-y-3`}>
+            <div className="flex justify-between text-sm">
+              <span className={Colors.text.secondary}>Assessment</span>
+              <span className={`font-medium ${Colors.text.primary}`}>
+                {submissionReport.assessmentName}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className={Colors.text.secondary}>Total Questions</span>
+              <span className={`font-medium ${Colors.text.primary}`}>
+                {submissionReport.totalQuestions ?? 0}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className={Colors.text.secondary}>Marks</span>
+              <span className={`font-medium ${Colors.text.primary}`}>
+                {submissionReport.obtainedMarks ?? 0} / {submissionReport.totalMarks ?? 0}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className={Colors.text.secondary}>Percentage</span>
+              <span className={`font-medium ${Colors.text.primary}`}>
+                {submissionReport.percentage ?? 0}%
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-end mt-6">
+            <button
+              onClick={() => router.push("/assessments")}
+              className={`px-4 py-2 rounded ${Colors.background.special} ${Colors.text.primary}`}
+            >
+              Back to Assessments
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`${Colors.background.primary} h-screen flex flex-col`}>

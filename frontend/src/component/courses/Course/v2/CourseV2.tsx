@@ -100,17 +100,37 @@ export default function CourseV2() {
   useEffect(() => {
     async function fetchData() {
       const res = await getCourseById(params.id as string);
-      const mappedSections = res.data.courseSections.map((sec: any) => ({
+      const payload = res?.data ?? {};
+      const rawSections = Array.isArray(payload.courseSections)
+        ? payload.courseSections
+        : Array.isArray(payload.sections)
+          ? payload.sections
+          : [];
+
+      const mappedSections = rawSections.map((sec: any) => ({
         ...sec,
+        courseLearningContents: Array.isArray(sec.courseLearningContents)
+          ? sec.courseLearningContents
+          : Array.isArray(sec.contents)
+            ? sec.contents.map((content: any) => ({
+                ...content,
+                videoUrl: content.videoUrl ?? content.video_url,
+              }))
+            : [],
+        courseAssignemnts: Array.isArray(sec.courseAssignemnts)
+          ? sec.courseAssignemnts
+          : Array.isArray(sec.assignments)
+            ? sec.assignments
+            : [],
         isOpen: false,
       }));
 
       setSections(mappedSections);
 
-      setCourseName(res.data.name);
+      setCourseName(payload.name ?? "");
       // map each section and mark the content as done
       const firstTopic =
-        res.data.courseSections?.[0]?.courseLearningContents?.[0];
+        mappedSections?.[0]?.courseLearningContents?.[0];
       if (firstTopic) setActiveTopic(firstTopic);
     }
 
@@ -134,24 +154,46 @@ export default function CourseV2() {
       } else {
         setCompletedSection([]);
       }
-      // console.log("calling get assignemnt");
-      const assignmentData = await getStudentAssignmentsBySection(
-        params.id as string,
-      );
-      // console.log(assignmentData);
-      // console.log("iterating over it");
-      const map = {};
-      for (let i = 0; i < assignmentData.length; i++) {
-        //@ts-ignore
-        map[assignmentData[i].assignmentId] = assignmentData[i].isSubmitted;
-      }
-      // console.log("iterating ended");
-      // console.log(map);
-      setCompletedAssignment(map);
     }
 
     fetchProgress();
   }, [params.id]);
+
+  useEffect(() => {
+    async function fetchAssignmentAttemptMap() {
+      if (!sections.length) {
+        setCompletedAssignment({});
+        return;
+      }
+
+      const nextMap: Record<string, boolean> = {};
+
+      await Promise.all(
+        sections.map(async (section) => {
+          const res = await getStudentAssignmentsBySection(section.id);
+          const assignmentData = Array.isArray(res?.data)
+            ? res.data
+            : Array.isArray(res?.data?.data)
+              ? res.data.data
+              : [];
+
+          for (const assignment of assignmentData) {
+            const assignmentId = assignment?.id;
+            if (!assignmentId) continue;
+            nextMap[assignmentId] = Boolean(
+              assignment?.attempted ??
+                assignment?.isAttempted ??
+                assignment?.isSubmitted,
+            );
+          }
+        }),
+      );
+
+      setCompletedAssignment(nextMap);
+    }
+
+    fetchAssignmentAttemptMap();
+  }, [sections]);
 
   /* ================= SIDEBAR RESIZE ================= */
   useEffect(() => {

@@ -5,6 +5,8 @@ export async function POST(req: NextRequest) {
   try {
     const backendUrl = process.env.BACKEND_URL;
     const data = await req.json();
+    const page = Math.max(1, Number(data.pageNumber ?? 0) + 1);
+    const limit = 1000;
 
     if (!backendUrl) {
       return NextResponse.json(
@@ -17,7 +19,7 @@ export async function POST(req: NextRequest) {
     const cookieHeader = req.headers.get("cookie");
 
     const response = await axiosInstance.get(
-      `${backendUrl}/api/v1/reports/course-report/${data.batchId}/${data.courseId}?page=${data.pageNumber}`,
+      `${backendUrl}/api/v1/reports/course-report/${data.batchId}/${data.courseId}?page=${page}&limit=${limit}`,
       {
         headers: {
           Cookie: cookieHeader || "",
