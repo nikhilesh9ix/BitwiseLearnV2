@@ -1,8 +1,6 @@
 import boto3
-from botocore.exceptions import ClientError
 from config import get_settings
 import uuid
-from urllib.parse import urlparse
 
 settings = get_settings()
 

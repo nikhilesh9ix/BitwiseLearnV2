@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useColors } from "@/component/general/(Color Manager)/useColors";
 import { useStudent } from "@/store/studentStore";
@@ -13,6 +12,9 @@ function OngoingCourses() {
 
   const student = info?.data;
   const teacher = teacherInfo?.data;
+  const institution =
+    student?.insitution ?? student?.institution ?? teacher?.institution;
+
   return (
     <div
       className={`${Colors.background.secondary} ${Colors.border.fadedThick} p-6 my-3 ml-3 rounded-2xl`}
@@ -79,18 +81,18 @@ function OngoingCourses() {
 
           <p className={`${Colors.text.secondary} mt-2`}>
             <span className="font-medium">Name:</span>{" "}
-            {student?.insitution.name || teacher?.institution.name}
+            {institution?.name || "N/A"}
           </p>
-          {student?.insitution && (
+          {institution?.tagline && (
             <p className={`${Colors.text.secondary}`}>
               <span className="font-medium">Tagline:</span>{" "}
-              {student?.insitution.tagline}
+              {institution?.tagline}
             </p>
           )}
 
-          {student?.insitution.websiteLink && (
+          {institution?.websiteLink && (
             <Link
-              href={student.insitution.websiteLink}
+              href={institution?.websiteLink}
               target="_blank"
               className={`inline-block mt-2 ${Colors.text.special} underline`}
             >

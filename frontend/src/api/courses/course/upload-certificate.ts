@@ -8,10 +8,10 @@ export const uploadCertificate = async (
 ) => {
   try {
     const formData = new FormData();
-    formData.append("certificate", file);
+    formData.append("file", file);
 
     const res = await axiosInstance.post(
-      `/api/v1/courses/upload-completion-certificate/${courseId}`,
+      `/api/course/upload-certificate/${courseId}`,
       formData,
     );
 
@@ -20,7 +20,8 @@ export const uploadCertificate = async (
     }
 
     return res.data;
-  } catch (error) {
-    toast.error("failed to update course certificate");
+  } catch (error: any) {
+    toast.error(error?.response?.data?.message || "failed to update course certificate");
+    throw error;
   }
 };

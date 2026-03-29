@@ -1,0 +1,246 @@
+version: '3.9'
+
+services:
+  # ECR Image References - Replace with your AWS account and region
+  # Format: {ACCOUNT_ID}.dkr.ecr.{REGION}.amazonaws.com/{REPO_NAME}:{TAG}
+
+  gateway:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/bitwise-gateway:${IMAGE_TAG:-latest}
+    container_name: bitwise-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - USER_SERVICE_URL=http://user-service:8002
+      - COURSE_SERVICE_URL=http://course-service:8003
+      - PROBLEM_SERVICE_URL=http://problem-service:8004
+      - ASSESSMENT_SERVICE_URL=http://assessment-service:8005
+      - CODE_SERVICE_URL=http://code-service:8006
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8007
+      - REPORT_SERVICE_URL=http://report-service:8008
+      - DATABASE_URL=${DATABASE_URL}
+      - MQ_CLIENT=${MQ_CLIENT}
+    env_file:
+      - .env.prod
+    depends_on:
+      - auth-service
+      - user-service
+      - course-service
+      - problem-service
+      - assessment-service
+      - code-service
+      - notification-service
+      - report-service
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/bitwise-gateway
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs
+
+  auth-service:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/bitwise-auth-service:${IMAGE_TAG:-latest}
+    container_name: auth-service
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MQ_CLIENT=${MQ_CLIENT}
+    env_file:
+      - .env.prod
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/bitwise-auth-service
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs
+
+  user-service:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/bitwise-user-service:${IMAGE_TAG:-latest}
+    container_name: user-service
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MQ_CLIENT=${MQ_CLIENT}
+    env_file:
+      - .env.prod
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/bitwise-user-service
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs
+
+  course-service:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/bitwise-course-service:${IMAGE_TAG:-latest}
+    container_name: course-service
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MQ_CLIENT=${MQ_CLIENT}
+    env_file:
+      - .env.prod
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/bitwise-course-service
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs
+
+  problem-service:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/bitwise-problem-service:${IMAGE_TAG:-latest}
+    container_name: problem-service
+    ports:
+      - "8004:8004"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MQ_CLIENT=${MQ_CLIENT}
+    env_file:
+      - .env.prod
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/bitwise-problem-service
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs
+
+  assessment-service:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/bitwise-assessment-service:${IMAGE_TAG:-latest}
+    container_name: assessment-service
+    ports:
+      - "8005:8005"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MQ_CLIENT=${MQ_CLIENT}
+    env_file:
+      - .env.prod
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/bitwise-assessment-service
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs
+
+  code-service:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/bitwise-code-service:${IMAGE_TAG:-latest}
+    container_name: code-service
+    ports:
+      - "8006:8006"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MQ_CLIENT=${MQ_CLIENT}
+    env_file:
+      - .env.prod
+    depends_on:
+      - rabbitmq
+      - piston
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/bitwise-code-service
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs
+
+  notification-service:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/bitwise-notification-service:${IMAGE_TAG:-latest}
+    container_name: notification-service
+    ports:
+      - "8007:8007"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MQ_CLIENT=${MQ_CLIENT}
+    env_file:
+      - .env.prod
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/bitwise-notification-service
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs
+
+  report-service:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/bitwise-report-service:${IMAGE_TAG:-latest}
+    container_name: report-service
+    ports:
+      - "8008:8008"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MQ_CLIENT=${MQ_CLIENT}
+    env_file:
+      - .env.prod
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/bitwise-report-service
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs
+
+  frontend:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/bitwise-frontend:${IMAGE_TAG:-latest}
+    container_name: bitwise-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://gateway:8000
+    env_file:
+      - .env.prod
+    depends_on:
+      - gateway
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/bitwise-frontend
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs
+
+  # Infrastructure Services
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: bitwise-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/bitwise-rabbitmq
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs
+
+  piston:
+    image: ghcr.io/engineer-man/piston:latest
+    container_name: bitwise-piston
+    ports:
+      - "2000:2000"
+    volumes:
+      - piston_data:/piston
+    privileged: true
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/bitwise-piston
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs
+
+volumes:
+  piston_data:
+    driver: local

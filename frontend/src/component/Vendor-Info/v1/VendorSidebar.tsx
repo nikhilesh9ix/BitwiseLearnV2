@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Pencil, Save, X, Trash, ArrowLeft } from "lucide-react";
 import InfoBlock from "./InfoBlock";
 import { deleteEntity, updateEntity } from "@/api/institutions/entity";
@@ -6,9 +6,16 @@ import { useRouter } from "next/navigation";
 import { useColors } from "@/component/general/(Color Manager)/useColors";
 
 type VendorSidebarProps = {
-  vendor: any;
-  onUpdate?: (data: any) => void;
-  onDelete?: (id: string) => void;
+  vendor: {
+    id: string;
+    name: string;
+    tagline?: string;
+    websiteLink?: string;
+    email?: string;
+    phoneNumber?: string;
+    createdAt?: string | Date;
+    [key: string]: unknown;
+  };
 };
 
 const formatDate = (dateString: string | Date): string => {
@@ -34,31 +41,34 @@ const formatDate = (dateString: string | Date): string => {
   return `${day}${getOrdinalSuffix(day)} ${month} ${year}`;
 };
 
-const Colors = useColors();
-
 const InputField = ({
   label,
   value,
   onChange,
   placeholder,
+  labelClassName,
+  inputClassName,
 }: {
   label: string;
   value: string;
   placeholder?: string;
+  labelClassName: string;
+  inputClassName: string;
   onChange: (v: string) => void;
 }) => (
   <div className="space-y-1">
-    <label className={`text-xs ${Colors.text.secondary}`}>{label}</label>
+    <label className={`text-xs ${labelClassName}`}>{label}</label>
     <input
       value={value}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
-      className={`w-full ${Colors.background.primary} ${Colors.border.defaultThick} ${Colors.text.primary} rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500`}
+      className={`w-full ${inputClassName} rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500`}
     />
   </div>
 );
 
-const VendorSidebar = ({ vendor, onUpdate, onDelete }: VendorSidebarProps) => {
+const VendorSidebar = ({ vendor }: VendorSidebarProps) => {
+  const Colors = useColors();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(vendor);
   const router = useRouter();
@@ -69,7 +79,7 @@ const VendorSidebar = ({ vendor, onUpdate, onDelete }: VendorSidebarProps) => {
   const formattedDate = vendor.createdAt ? formatDate(vendor.createdAt) : "";
 
   const handleChange = (key: string, value: string) => {
-    setFormData((prev: any) => ({
+    setFormData((prev) => ({
       ...prev,
       [key]: value,
     }));
@@ -120,6 +130,8 @@ const VendorSidebar = ({ vendor, onUpdate, onDelete }: VendorSidebarProps) => {
             label="Institution Name"
             value={formData.name}
             onChange={(v) => handleChange("name", v)}
+            labelClassName={Colors.text.secondary}
+            inputClassName={`${Colors.background.primary} ${Colors.border.defaultThick} ${Colors.text.primary}`}
           />
         ) : (
           <h1 className="text-2xl font-semibold">{vendor.name}</h1>
@@ -150,16 +162,22 @@ const VendorSidebar = ({ vendor, onUpdate, onDelete }: VendorSidebarProps) => {
               label="Website Link"
               value={formData.websiteLink || ""}
               onChange={(v) => handleChange("websiteLink", v)}
+              labelClassName={Colors.text.secondary}
+              inputClassName={`${Colors.background.primary} ${Colors.border.defaultThick} ${Colors.text.primary}`}
             />
             <InputField
               label="Email"
               value={formData.email || ""}
               onChange={(v) => handleChange("email", v)}
+              labelClassName={Colors.text.secondary}
+              inputClassName={`${Colors.background.primary} ${Colors.border.defaultThick} ${Colors.text.primary}`}
             />
             <InputField
               label="Contact Number"
               value={formData.phoneNumber || ""}
               onChange={(v) => handleChange("phoneNumber", v)}
+              labelClassName={Colors.text.secondary}
+              inputClassName={`${Colors.background.primary} ${Colors.border.defaultThick} ${Colors.text.primary}`}
             />
 
             <InfoBlock label="Member Since" value={formattedDate} />

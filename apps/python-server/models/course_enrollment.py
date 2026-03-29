@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Optional
-from beanie import Document, PydanticObjectId, Indexed
+from beanie import Document, PydanticObjectId
 from pydantic import Field
 import pymongo
 

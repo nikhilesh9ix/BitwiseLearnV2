@@ -632,9 +632,7 @@ const CourseBuilderV1 = ({ courseId }: Props) => {
     },
     {
       label: "At least one section Needed",
-      satisfied:
-        Array.isArray(course?.courseSections) &&
-        course.courseSections.length > 0,
+      satisfied: Array.isArray(sections) && sections.length > 0,
     },
     {
       label: "Thumbnail uploaded",

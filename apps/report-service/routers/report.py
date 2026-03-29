@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from beanie import PydanticObjectId
 from shared.utils.api_response import api_response
-from shared.middleware.auth import get_current_user, not_student, admin_only
+from shared.middleware.auth import not_student, admin_only
 from shared.models.user import User
 from shared.models.institution import Institution
 from shared.models.vendor import Vendor

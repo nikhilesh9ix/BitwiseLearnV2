@@ -6,8 +6,6 @@ from services.s3 import upload_file_to_s3
 
 # These imports will work after Beanie is initialized in main.py
 # We import models at module level since they're used in async functions after init
-import sys
-import os
 
 # Add parent python-server models path — worker shares same DB models
 # Models are re-declared below for the worker context

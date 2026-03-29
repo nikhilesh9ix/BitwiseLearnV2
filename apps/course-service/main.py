@@ -31,7 +31,7 @@ SERVICE_MODELS = [
 async def lifespan(app: FastAPI):
     client, db_name = await connect_to_mongo(settings)
     await init_beanie(database=client[db_name], document_models=SERVICE_MODELS)
-    print(f"[course-service] Connected to MongoDB: {db_name}")
+    print(f"[course-service] Database connected: {db_name}")
     yield
     client.close()
 

@@ -14,9 +14,7 @@ from shared.models.assessment_section import AssessmentSection
 from shared.models.assessment_question import AssessmentQuestion
 from shared.models.assessment_submission import AssessmentSubmission
 from shared.models.assessment_question_submission import AssessmentQuestionSubmission
-from shared.models.student import Student
 from shared.models.batch import Batch
-from shared.models.institution import Institution
 from shared.services.piston import execute_code
 from shared.services.queue import publish_message
 from shared.enums import UserType, AssessmentStatus, AssessmentType, ReportStatus

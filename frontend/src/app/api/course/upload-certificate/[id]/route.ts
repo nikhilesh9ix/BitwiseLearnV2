@@ -24,7 +24,18 @@ export async function POST(
       },
     );
 
-    const data = await res.json();
+    const raw = await res.text();
+    let data: any;
+
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch {
+      data = {
+        message: raw || "Upload failed",
+        error: raw || "Upload failed",
+      };
+    }
+
     return NextResponse.json(data, { status: res.status });
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });

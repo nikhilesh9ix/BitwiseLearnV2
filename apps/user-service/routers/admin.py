@@ -14,7 +14,6 @@ from shared.models.teacher import Teacher
 from shared.models.batch import Batch
 from shared.models.course import Course
 from shared.models.assessment import Assessment
-from shared.models.course_enrollment import CourseEnrollment
 from shared.enums import UserType
 from shared.services.email import send_welcome_email
 

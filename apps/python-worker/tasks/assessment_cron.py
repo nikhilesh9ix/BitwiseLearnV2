@@ -7,8 +7,7 @@ async def check_assessment_status():
     - UPCOMING -> LIVE if start_time <= now
     - LIVE -> ENDED if end_time <= now (auto-submit pending students)
     """
-    from models import Assessment, AssessmentSubmission, AssessmentQuestionSubmission, Student
-    from beanie import PydanticObjectId
+    from models import Assessment, AssessmentSubmission, AssessmentQuestionSubmission
 
     now = datetime.now(timezone.utc)
     print(f"[CRON] Checking assessment statuses at {now.isoformat()}")

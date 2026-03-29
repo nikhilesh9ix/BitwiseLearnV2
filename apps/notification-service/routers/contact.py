@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from shared.utils.api_response import api_response
 from shared.services.email import send_contact_email
 

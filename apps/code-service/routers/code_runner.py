@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
 from beanie import PydanticObjectId
 from shared.schemas.problem import RunCodeRequest, CompileCodeRequest, SubmitCodeRequest

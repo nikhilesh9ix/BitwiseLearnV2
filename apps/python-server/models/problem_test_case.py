@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from beanie import Document, PydanticObjectId
 from pydantic import Field
-from enums import TestcaseType
 
 
 class ProblemTestCase(Document):

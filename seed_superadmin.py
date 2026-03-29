@@ -1,7 +1,7 @@
 """
-One-time script to seed a SUPERADMIN user into MongoDB.
+One-time script to seed a SUPERADMIN user into the database.
 Run from the project root:
-    python seed_superadmin.py
+    uv run --no-project --with-requirements apps/python-server/requirements.txt seed_superadmin.py
 
 Required environment variables:
     DATABASE_URL
@@ -66,7 +66,7 @@ async def seed():
         "password": hash_password(SUPERADMIN_PASSWORD),
         "role": UserType.SUPERADMIN.value,
     })
-    print(f"[seed] Superadmin created successfully!")
+    print("[seed] Superadmin created successfully!")
     print(f"       Email:    {SUPERADMIN_EMAIL}")
     print(f"       Password: {SUPERADMIN_PASSWORD}")
     client.close()

@@ -1,4 +1,3 @@
-import secrets
 from fastapi import APIRouter, Response, Request
 from schemas.auth import LoginRequest, ForgotPasswordRequest, VerifyOtpRequest, ResetPasswordRequest
 from utils.api_response import api_response
@@ -137,29 +136,27 @@ async def refresh_token(request: Request, response: Response):
 async def forgot_password(body: ForgotPasswordRequest):
     email = body.email.lower()
     user_found = None
-    user_type = None
-    user_id = None
 
     # Search all collections
     u = await User.find_one(User.email == email)
     if u:
-        user_found, user_type, user_id = u, u.role, str(u.id)
+        user_found = u
     else:
         inst = await Institution.find_one(Institution.email == email)
         if inst:
-            user_found, user_type, user_id = inst, UserType.INSTITUTION, str(inst.id)
+            user_found = inst
         else:
             v = await Vendor.find_one(Vendor.email == email)
             if v:
-                user_found, user_type, user_id = v, UserType.VENDOR, str(v.id)
+                user_found = v
             else:
                 t = await Teacher.find_one(Teacher.email == email)
                 if t:
-                    user_found, user_type, user_id = t, UserType.TEACHER, str(t.id)
+                    user_found = t
                 else:
                     s = await Student.find_one(Student.email == email)
                     if s:
-                        user_found, user_type, user_id = s, UserType.STUDENT, str(s.id)
+                        user_found = s
 
     if not user_found:
         return api_response(404, "Email not found", error="Email not registered")

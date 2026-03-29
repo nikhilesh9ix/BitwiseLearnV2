@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import base64
 from fastapi import APIRouter, Depends, UploadFile, File
 from beanie import PydanticObjectId
 from schemas.course import (
@@ -25,6 +26,34 @@ from services.s3 import upload_file_to_s3, delete_file_from_s3
 from services.cloudinary_service import upload_to_cloudinary, delete_from_cloudinary
 
 router = APIRouter(prefix="/api/v1/courses", tags=["Courses"])
+
+
+def _delete_media_url(file_url: str) -> None:
+    if not file_url:
+        return
+    if file_url.startswith("data:"):
+        return
+    if "cloudinary.com" in file_url:
+        delete_from_cloudinary(file_url)
+    else:
+        delete_file_from_s3(file_url)
+
+
+def _upload_media(file_bytes: bytes, folder: str, filename: str, content_type: str | None) -> str:
+    try:
+        return upload_to_cloudinary(file_bytes, folder, filename)
+    except Exception:
+        try:
+            return upload_file_to_s3(
+                file_bytes=file_bytes,
+                folder=folder,
+                filename=filename,
+                content_type=content_type or "application/octet-stream",
+            )
+        except Exception:
+            mime_type = content_type or "application/octet-stream"
+            encoded = base64.b64encode(file_bytes).decode("utf-8")
+            return f"data:{mime_type};base64,{encoded}"
 
 # ========== COURSE CRUD ==========
 
@@ -54,14 +83,24 @@ async def upload_thumbnail(id: str, file: UploadFile = File(...), current_user: 
     if not course:
         return api_response(404, "Course not found", error="Not found")
 
-    content = await file.read()
-    url = upload_to_cloudinary(content, "course-thumbnails", file.filename or "thumbnail")
-    if course.thumbnail:
-        delete_from_cloudinary(course.thumbnail)
-    course.thumbnail = url
-    course.updated_at = datetime.now(timezone.utc)
-    await course.save()
-    return api_response(200, "Thumbnail uploaded", data={"thumbnail": url})
+    try:
+        content = await file.read()
+        url = _upload_media(
+            file_bytes=content,
+            folder="course-thumbnails",
+            filename=file.filename or "thumbnail",
+            content_type=file.content_type,
+        )
+
+        if course.thumbnail:
+            _delete_media_url(course.thumbnail)
+
+        course.thumbnail = url
+        course.updated_at = datetime.now(timezone.utc)
+        await course.save()
+        return api_response(200, "Thumbnail uploaded", data={"thumbnail": url})
+    except Exception as exc:
+        return api_response(500, "Failed to upload thumbnail", error=str(exc))
 
 
 @router.post("/upload-completion-certificate/{id}")
@@ -70,14 +109,24 @@ async def upload_certificate(id: str, file: UploadFile = File(...), current_user
     if not course:
         return api_response(404, "Course not found", error="Not found")
 
-    content = await file.read()
-    url = upload_to_cloudinary(content, "course-certificates", file.filename or "certificate")
-    if course.certificate:
-        delete_from_cloudinary(course.certificate)
-    course.certificate = url
-    course.updated_at = datetime.now(timezone.utc)
-    await course.save()
-    return api_response(200, "Certificate uploaded", data={"certificate": url})
+    try:
+        content = await file.read()
+        url = _upload_media(
+            file_bytes=content,
+            folder="course-certificates",
+            filename=file.filename or "certificate",
+            content_type=file.content_type,
+        )
+
+        if course.certificate:
+            _delete_media_url(course.certificate)
+
+        course.certificate = url
+        course.updated_at = datetime.now(timezone.utc)
+        await course.save()
+        return api_response(200, "Certificate uploaded", data={"certificate": url})
+    except Exception as exc:
+        return api_response(500, "Failed to upload certificate", error=str(exc))
 
 
 @router.put("/change-publish-status/{id}")
@@ -170,7 +219,34 @@ async def get_course_by_institution(id: str, current_user: dict = Depends(get_cu
 @router.get("/get-all-sections-by-course/{id}")
 async def get_all_sections_by_course(id: str, current_user: dict = Depends(get_current_user)):
     sections = await CourseSection.find(CourseSection.course_id == PydanticObjectId(id)).to_list()
-    data = [{"id": str(s.id), "name": s.name, "course_id": str(s.course_id)} for s in sections]
+
+    data = []
+    for section in sections:
+        contents = await CourseLearningContent.find(
+            CourseLearningContent.section_id == section.id
+        ).to_list()
+
+        content_data = [
+            {
+                "id": str(content.id),
+                "name": content.name,
+                "description": content.description,
+                "video_url": content.video_url,
+                "transcript": content.transcript,
+                "file": content.file,
+            }
+            for content in contents
+        ]
+
+        data.append(
+            {
+                "id": str(section.id),
+                "name": section.name,
+                "course_id": str(section.course_id),
+                "course_learning_contents": content_data,
+            }
+        )
+
     return api_response(200, "Sections fetched", data=data)
 
 
@@ -720,6 +796,9 @@ async def get_course_enrollments_by_batch(id: str, current_user: dict = Depends(
         data.append({
             "id": str(e.id), "course_id": str(e.course_id),
             "course_name": course.name if course else None,
+            "instructor_name": course.instructor_name if course else None,
+            "level": course.level if course else None,
+            "created_at": course.created_at.isoformat() if course else None,
             "batch_id": str(e.batch_id), "enrolled_at": e.enrolled_at.isoformat()
         })
     return api_response(200, "Enrollments fetched", data=data)

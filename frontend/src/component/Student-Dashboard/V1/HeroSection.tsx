@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { User, Clock, Search } from "lucide-react";
 import { useColors } from "@/component/general/(Color Manager)/useColors";
 import { useStudent } from "@/store/studentStore";
-import { allBatchCourses } from "@/api/courses/course/enrollments/get-all-batch-courses";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { getStudentCourses } from "@/api/courses/course/get-all-courses";
@@ -71,6 +70,10 @@ function Header({ name, email }: { name: string; email: string }) {
 export default function HeroSection() {
   const Colors = useColors();
   const student = useStudent();
+  const studentData =
+    (student.info as { data?: { name?: string; email?: string; batch?: { id?: string } }; name?: string; email?: string; batch?: { id?: string } } | null)
+      ?.data ??
+    (student.info as { name?: string; email?: string; batch?: { id?: string } } | null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,7 +82,7 @@ export default function HeroSection() {
     course.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const batchID = student.info?.data?.batch?.id;
+  const batchID = studentData?.batch?.id;
 
   useEffect(() => {
     if (!batchID) return;
@@ -89,10 +92,29 @@ export default function HeroSection() {
         setLoading(true);
         // const data = await allBatchCourses(batchID);
         const data = await getStudentCourses();
-        const normalized: Course[] = data.map((course: any) => ({
-          ...course,
-          level: normalizeLevel(course.level),
-        }));
+        const normalized: Course[] = data.map((course: unknown) => {
+          const current = course as {
+            level?: string;
+            id?: string;
+            name?: string;
+            description?: string;
+            isPublished?: string;
+            duration?: string;
+            thumbnail?: string | null;
+            instructorName?: string;
+          };
+
+          return {
+            id: current.id ?? "",
+            name: current.name ?? "",
+            description: current.description ?? "",
+            isPublished: current.isPublished ?? "",
+            level: normalizeLevel(current.level ?? "BASIC"),
+            duration: current.duration,
+            thumbnail: current.thumbnail,
+            instructorName: current.instructorName ?? "",
+          };
+        });
 
         setCourses(normalized);
       } finally {
@@ -106,8 +128,8 @@ export default function HeroSection() {
   return (
     <>
       <Header
-        name={student.info?.data.name ?? "Student"}
-        email={student.info?.data.email ?? ""}
+        name={studentData?.name ?? "Student"}
+        email={studentData?.email ?? ""}
       />
 
       <section className="px-6 mt-10">

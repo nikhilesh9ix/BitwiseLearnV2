@@ -27,8 +27,11 @@ export default function StudentSideBar() {
   const isResizing = useRef(false);
   const sidebarRef = useRef<HTMLElement | null>(null);
 
-  const { logout } = useStudent();
   const student = useStudent();
+  const studentData =
+    (student.info as { data?: { name?: string; batch?: { batchname?: string } }; name?: string; batch?: { batchname?: string } } | null)
+      ?.data ??
+    (student.info as { name?: string; batch?: { batchname?: string } } | null);
 
   const isCollapsed = width <= 80;
 
@@ -97,10 +100,10 @@ export default function StudentSideBar() {
         {!isCollapsed && (
           <div className="mt-3 text-center">
             <p className="text-sm font-semibold">
-              {student.info?.data.name || "Student"}
+              {studentData?.name || "Student"}
             </p>
             <p className={`text-xs ${Colors.text.secondary}`}>
-              {student.info?.data.batch.batchname}
+              {studentData?.batch?.batchname || ""}
             </p>
           </div>
         )}

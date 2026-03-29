@@ -19,7 +19,7 @@ A multi-tenant educational platform for institutions, vendors, and students — 
 
 ### Backend
 - **Framework**: FastAPI 0.115.6 + Uvicorn
-- **Database**: MongoDB with Beanie 1.27.0 ODM (Motor async driver)
+- **Database**: Document database with Beanie 1.27.0 ODM (Motor async driver)
 - **Auth**: PyJWT, Passlib + bcrypt
 - **Queue**: RabbitMQ via aio-pika
 - **Storage**: AWS S3 (boto3), Cloudinary
@@ -85,8 +85,9 @@ BitwiseV2/
 ## Prerequisites
 
 - Python 3.11+
+- uv (recommended Python package/environment manager)
 - Node.js 18+
-- MongoDB (running locally or connection string)
+- Document database (running locally or connection string)
 - RabbitMQ (optional — for async report generation)
 
 ## Environment Variables
@@ -94,7 +95,7 @@ BitwiseV2/
 Create a `.env` file in the project root (or in `apps/python-server/`):
 
 ```env
-DATABASE_URL=mongodb://localhost:27017/bitwiselearn
+DATABASE_URL=<db_connection_string>
 JWT_ACCESS_SECRET=your-access-secret
 JWT_REFRESH_SECRET=your-refresh-secret
 RESET_TOKEN_SECRET=your-reset-token-secret
@@ -148,8 +149,7 @@ You should get JSON with `run.stdout`.
 ```bash
 # Backend
 cd apps/python-server
-pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uv run --no-project --with-requirements requirements.txt uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 # Frontend (separate terminal)
 cd frontend

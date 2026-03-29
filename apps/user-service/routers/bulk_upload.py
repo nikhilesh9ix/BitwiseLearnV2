@@ -3,15 +3,14 @@ from fastapi import APIRouter, Depends, UploadFile, File
 from beanie import PydanticObjectId
 from shared.utils.api_response import api_response
 from shared.utils.password import hash_password
-from shared.middleware.auth import get_current_user, not_student, admin_only
+from shared.middleware.auth import not_student, admin_only
 from shared.models.student import Student
 from shared.models.batch import Batch
 from shared.models.institution import Institution
 from shared.models.problem_test_case import ProblemTestCase
-from shared.models.assessment import Assessment
 from shared.models.assessment_section import AssessmentSection
 from shared.models.assessment_question import AssessmentQuestion
-from shared.enums import TestcaseType, AssessmentType
+from shared.enums import TestcaseType
 import openpyxl
 import io
 import secrets

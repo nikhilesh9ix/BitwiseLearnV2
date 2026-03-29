@@ -14,7 +14,7 @@ from shared.models.problem_template import ProblemTemplate
 from shared.models.problem_test_case import ProblemTestCase
 from shared.models.problem_solution import ProblemSolution
 from shared.models.problem_submission import ProblemSubmission
-from shared.enums import ListingStatus, TestcaseType, UserType
+from shared.enums import ListingStatus, TestcaseType
 import re
 
 router = APIRouter(prefix="/api/v1/problems", tags=["DSA Problems"])
