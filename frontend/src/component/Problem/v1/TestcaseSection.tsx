@@ -1,9 +1,9 @@
 "use client";
 
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 export default function TestCaseSection({ testCases }: { testCases: any[] }) {
-  const Colors = useColors();
+  const Colors = getColors();
 
   if (!testCases || testCases.length === 0) return null;
 
@@ -95,3 +95,5 @@ export default function TestCaseSection({ testCases }: { testCases: any[] }) {
     </div>
   );
 }
+
+

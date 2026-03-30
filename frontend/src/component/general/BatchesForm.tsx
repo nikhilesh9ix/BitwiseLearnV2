@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { createBatch } from "@/api/batches/create-batch";
-import { useColors } from "./(Color Manager)/useColors";
+import { getColors } from "./(Color Manager)/useColors";
 
 type BatchFormData = {
   batchname: string;
@@ -17,7 +17,7 @@ type Props = {
   onSubmit?: (data: BatchFormData) => void;
 };
 
-const Colors = useColors();
+const Colors = getColors();
 
 function BatchesForm({ openForm, institutionId, onSubmit }: Props) {
   const [formData, setFormData] = useState<BatchFormData>({
@@ -177,7 +177,7 @@ function BatchesForm({ openForm, institutionId, onSubmit }: Props) {
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <label
       className={`text-[11px] uppercase tracking-wide ${Colors.text.special}`}
@@ -208,3 +208,5 @@ function Input({
 }
 
 export default BatchesForm;
+
+

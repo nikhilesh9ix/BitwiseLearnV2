@@ -10,9 +10,9 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useRef } from "react";
 import CourseForm from "@/component/(admin-course-pages)/course-form/CourseForm";
 import toast from "react-hot-toast";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
-const Colors = useColors();
+const Colors = getColors();
 
 const RightSection = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -334,3 +334,5 @@ const RightSection = () => {
 };
 
 export default RightSection;
+
+

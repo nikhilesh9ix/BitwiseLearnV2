@@ -8,7 +8,7 @@ import SideBar from "@/component/general/SideBar";
 import Link from "next/link";
 import { useRef } from "react";
 import axiosInstance from "@/lib/axios";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import StudentSideBar from "@/component/general/StudentSidebar";
 import { useAdmin } from "@/store/adminStore";
 import { getStudentCourses } from "@/api/courses/course/get-all-courses";
@@ -26,7 +26,7 @@ interface Course {
   instructorName: string;
 }
 
-const Colors = useColors();
+const Colors = getColors();
 
 export const getAllCourses = async () => {
   const res = await axiosInstance.get("/api/course");
@@ -345,3 +345,5 @@ export default function AllCoursesV1() {
     </div>
   );
 }
+
+

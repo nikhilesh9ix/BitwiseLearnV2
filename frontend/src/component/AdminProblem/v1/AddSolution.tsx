@@ -2,7 +2,7 @@
 
 import { createSolution } from "@/api/problems/create-solution";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import MarkdownEditor from "@/component/ui/MarkDownEditor";
 import { X } from "lucide-react";
 import { useState } from "react";
@@ -19,7 +19,7 @@ function AddSolution({ stateFn, id }: AddSolutionProps) {
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const Colors = useColors();
+  const Colors = getColors();
 
   const handleSubmit = async () => {
     if (!solutionDescription.trim()) {
@@ -117,3 +117,5 @@ function AddSolution({ stateFn, id }: AddSolutionProps) {
 }
 
 export default AddSolution;
+
+

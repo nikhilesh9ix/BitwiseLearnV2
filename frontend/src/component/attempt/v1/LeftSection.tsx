@@ -1,5 +1,5 @@
 import React from "react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import "./assignment.css";
 
 type TestCase = {
@@ -23,7 +23,7 @@ type Props = {
   testCases: TestCase[];
 };
 
-const Colors = useColors();
+const Colors = getColors();
 
 export default function LeftSection({
   question,
@@ -143,3 +143,5 @@ export default function LeftSection({
     </div>
   );
 }
+
+

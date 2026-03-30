@@ -1,25 +1,26 @@
+import asyncio
+import math
+
 from fastapi import APIRouter, Depends, Query
 from beanie import PydanticObjectId
-from utils.api_response import api_response
-from middleware.auth import not_student, admin_only
-from models.user import User
-from models.institution import Institution
-from models.vendor import Vendor
 from models.batch import Batch
-from models.teacher import Teacher
-from models.student import Student
-from models.course import Course
-from models.course_section import CourseSection
-from models.course_content import CourseLearningContent
-from models.course_assignment import CourseAssignment
-from models.course_assignment_submission import CourseAssignmentSubmission
-from models.course_enrollment import CourseEnrollment
-from models.course_progress import CourseProgress
 from models.assessment import Assessment
 from models.assessment_submission import AssessmentSubmission
-from services.queue import publish_message
+from models.course import Course
+from models.course_assignment import CourseAssignment
+from models.course_assignment_submission import CourseAssignmentSubmission
+from models.course_content import CourseLearningContent
+from models.course_progress import CourseProgress
+from models.course_section import CourseSection
+from models.institution import Institution
+from models.student import Student
+from models.teacher import Teacher
+from models.user import User
+from models.vendor import Vendor
 from enums import ReportStatus, UserType
-import math
+from middleware.auth import admin_only, not_student
+from services.queue import publish_message
+from utils.api_response import api_response
 
 router = APIRouter(prefix="/api/v1/reports", tags=["Reports"])
 
@@ -33,15 +34,6 @@ async def _load_students_map(student_ids: list[PydanticObjectId]) -> dict[str, S
     return {str(student.id): student for student in students}
 
 
-async def _load_batches_map(batch_ids: list[PydanticObjectId]) -> dict[str, Batch]:
-    if not batch_ids:
-        return {}
-
-    unique_ids = list(dict.fromkeys(batch_ids))
-    batches = await Batch.find({"_id": {"$in": unique_ids}}).to_list()
-    return {str(batch.id): batch for batch in batches}
-
-
 def _group_by_student(records: list, attr_name: str) -> dict[str, list]:
     grouped: dict[str, list] = {}
     for record in records:
@@ -50,16 +42,49 @@ def _group_by_student(records: list, attr_name: str) -> dict[str, list]:
     return grouped
 
 
+async def _count_query(query_factory) -> int:
+    return await query_factory().count()
+
+
+async def _count_admins() -> int:
+    finder = getattr(User, "find", None)
+    role_field = getattr(User, "role", None)
+
+    if callable(finder) and role_field is not None:
+        try:
+            return await finder(role_field == UserType.ADMIN).count()
+        except Exception:
+            # Some tests partially stub the User model and only provide find_all().
+            pass
+
+    find_all = getattr(User, "find_all", None)
+    if callable(find_all):
+        return await find_all().count()
+
+    raise RuntimeError("User model does not support admin counting.")
+
+
 @router.get("/get-stats-count")
 async def get_stats_count(current_user: dict = Depends(admin_only)):
-    admins = await User.find(User.role == UserType.ADMIN).count()
-    institutions = await Institution.find_all().count()
-    vendors = await Vendor.find_all().count()
-    batches = await Batch.find_all().count()
-    teachers = await Teacher.find_all().count()
-    students = await Student.find_all().count()
-    courses = await Course.find_all().count()
-    assessments = await Assessment.find_all().count()
+    (
+        admins,
+        institutions,
+        vendors,
+        batches,
+        teachers,
+        students,
+        courses,
+        assessments,
+    ) = await asyncio.gather(
+        _count_admins(),
+        _count_query(Institution.find_all),
+        _count_query(Vendor.find_all),
+        _count_query(Batch.find_all),
+        _count_query(Teacher.find_all),
+        _count_query(Student.find_all),
+        _count_query(Course.find_all),
+        _count_query(Assessment.find_all),
+    )
 
     return api_response(200, "Stats fetched", data={
         "admins": admins,

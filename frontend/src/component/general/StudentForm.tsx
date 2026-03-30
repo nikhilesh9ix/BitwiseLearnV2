@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { createStudent } from "@/api/students/create-student";
-import { useColors } from "./(Color Manager)/useColors";
+import { getColors } from "./(Color Manager)/useColors";
 type StudentFormData = {
   name: string;
   rollNumber: string;
@@ -24,7 +24,7 @@ type Props = {
   onSubmit?: (data: StudentFormData) => void;
 };
 
-const Colors = useColors();
+const Colors = getColors();
 
 function StudentForm({ openForm, institutionId, batches, onSubmit }: Props) {
   const [formData, setFormData] = useState<StudentFormData>({
@@ -259,3 +259,5 @@ function Input({
 }
 
 export default StudentForm;
+
+

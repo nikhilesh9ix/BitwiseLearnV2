@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Editor } from "@monaco-editor/react";
 import { X } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
 
 const LANGUAGE_MAP: Record<string, string> = {
@@ -81,7 +81,7 @@ function ShowAddTemplateForm({ onClose, onSave }: Props) {
   const [language, setLanguage] = useState("PYTHON");
   const [defaultCode, setDefaultCode] = useState(DEFAULT_CODE_MAP[language]);
   const [functionBody, setFunctionBody] = useState(FUNCTONBODY_MAP[language]);
-  const Colors = useColors();
+  const Colors = getColors();
   const [activeTab, setActiveTab] = useState<"defaultCode" | "functionBody">(
     "defaultCode",
   );
@@ -211,3 +211,5 @@ function ShowAddTemplateForm({ onClose, onSave }: Props) {
 }
 
 export default ShowAddTemplateForm;
+
+

@@ -3,11 +3,11 @@ import { createProblem } from "@/api/problems/create-admin-problem";
 import MarkdownEditor from "@/component/ui/MarkDownEditor";
 import { X, Plus, Trash2, Save } from "lucide-react";
 import { useState } from "react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import toast from "react-hot-toast";
 
 function ProblemSubmissionForm({ setOpen }: any) {
-  const Colors = useColors();
+  const Colors = getColors();
   const [name, setName] = useState("");
   const [description, setDescription] = useState(`# Problem Statement
 
@@ -202,3 +202,5 @@ Output:
 }
 
 export default ProblemSubmissionForm;
+
+

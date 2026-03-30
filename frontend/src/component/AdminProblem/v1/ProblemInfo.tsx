@@ -4,11 +4,11 @@ import AllTestCases from "./AllTestCases";
 import Solution from "./Solution";
 import Submissions from "./Submissions";
 import Templates from "./Templates";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 function ProblemInfo({ content }: any) {
-  const Colors = useColors();
+  const Colors = getColors();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -73,3 +73,5 @@ function ProblemInfo({ content }: any) {
 }
 
 export default ProblemInfo;
+
+

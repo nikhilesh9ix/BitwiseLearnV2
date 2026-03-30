@@ -10,7 +10,7 @@ import {
   PlayCircle,
   CheckCircle,
 } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import Link from "next/link";
 import { handleReport } from "@/api/reports/get-full-report";
 import toast from "react-hot-toast";
@@ -37,7 +37,7 @@ function AllAssessments() {
   const [status, setStatus] = useState<"all" | Assessment["status"]>("all");
 
   const router = useRouter();
-  const Colors = useColors();
+  const Colors = getColors();
 
   useEffect(() => {
     async function handleLoad() {
@@ -286,3 +286,5 @@ function AllAssessments() {
 }
 
 export default AllAssessments;
+
+

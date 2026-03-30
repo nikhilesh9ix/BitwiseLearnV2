@@ -2,7 +2,7 @@
 
 import React from "react";
 import CourseBuilderV1 from "@/component/(admin-course-pages)/course-builder/v1/CourseBuilderV1";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -10,7 +10,7 @@ type PageProps = {
 
 export default function AdminCourse({ params }: PageProps) {
   const { id } = React.use(params);
-  const Colors = useColors();
+  const Colors = getColors();
 
   return (
     <div className={`flex h-screen overflow-hidden ${Colors.background.primary}`}>
@@ -20,3 +20,5 @@ export default function AdminCourse({ params }: PageProps) {
     </div>
   );
 }
+
+

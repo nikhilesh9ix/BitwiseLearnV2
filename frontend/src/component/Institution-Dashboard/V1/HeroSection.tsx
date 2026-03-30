@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { User, Plus, X } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useInstitution } from "@/store/institutionStore";
 import { getAllBatches } from "@/api/batches/get-all-batches";
 import DashboardInfo from "@/component/AllBatches/v1/DashboardInfo";
@@ -19,7 +19,7 @@ type Batch = {
 /* ---------------- HEADER ---------------- */
 
 function Header() {
-  const Colors = useColors();
+  const Colors = getColors();
   const institution = useInstitution();
 
   if (!institution.info) return null;
@@ -60,7 +60,7 @@ function Header() {
 
 export default function HeroSection() {
   const institution = useInstitution();
-  const Colors = useColors();
+  const Colors = getColors();
 
   const institutionId = institution.info?.data?.id;
   const [batches, setBatches] = useState<any[]>([]);
@@ -136,3 +136,5 @@ export default function HeroSection() {
     </div>
   );
 }
+
+

@@ -4,7 +4,7 @@ import { use, useState } from "react";
 import InstitutionSidebar from "./InstitutionSidebar";
 import { Tabs } from "./Tabs";
 import { EntityList } from "./EntityList";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type InstitutionInfoProps = {
   institution: any;
@@ -13,7 +13,7 @@ type InstitutionInfoProps = {
 const InstitutionInfo = ({ institution }: InstitutionInfoProps) => {
   const [activeTab, setActiveTab] = useState("Teachers");
   const [refreshKey, setRefreshKey] = useState(0);
-  const Colors = useColors();
+  const Colors = getColors();
 
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1);
@@ -51,3 +51,5 @@ const InstitutionInfo = ({ institution }: InstitutionInfoProps) => {
 };
 
 export default InstitutionInfo;
+
+

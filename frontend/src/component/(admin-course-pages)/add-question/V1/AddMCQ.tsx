@@ -1,9 +1,9 @@
 "use client";
 
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useState } from "react";
 
-const Colors = useColors();
+const Colors = getColors();
 
 const AddMCQ = () => {
   const [question, setQuestion] = useState("");
@@ -88,3 +88,5 @@ const AddMCQ = () => {
 };
 
 export default AddMCQ;
+
+

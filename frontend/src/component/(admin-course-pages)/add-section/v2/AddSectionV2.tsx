@@ -13,7 +13,7 @@ import { getAssignmentsBySection } from "@/api/courses/assignment/get-section-as
 import { updateAssignment } from "@/api/courses/assignment/update-assignment";
 import { deleteAssignmentById } from "@/api/courses/assignment/delete-assignment";
 import QuestionEditorWrapper from "../../add-assignment/v1/QuestionEditorWrapper";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { uploadBatches } from "@/api/batches/create-batches";
 import { addAssignmentQuestion } from "@/api/courses/assignment-questions/add-question";
 
@@ -51,7 +51,7 @@ interface AddTopicModalProps {
 }
 
 const AddTopicModal = ({ open, onClose, onSubmit }: AddTopicModalProps) => {
-  const Colors = useColors();
+  const Colors = getColors();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
@@ -150,7 +150,7 @@ const ConfirmDeleteSectionModal = ({
   onClose: () => void;
   onConfirm: () => void;
 }) => {
-  const Colors = useColors();
+  const Colors = getColors();
   if (!open) return null;
 
   return (
@@ -217,7 +217,7 @@ const UpdateTopicModal = ({
   const [videoUrl, setVideoUrl] = useState(initialData.videoUrl || "");
   const [transcriptText, setTranscriptText] = useState("");
   const [transcriptFile, setTranscriptFile] = useState<File | null>(null);
-  const Colors = useColors();
+  const Colors = getColors();
 
   useEffect(() => {
     if (open) {
@@ -406,7 +406,7 @@ const EditAssignmentModal = ({
   const [marks, setMarks] = useState<number | "">(initialData.marksPerQuestion);
   const [instruction, setInstruction] = useState(initialData.instruction);
   const [saving, setSaving] = useState(false);
-  const Colors = useColors();
+  const Colors = getColors();
 
   useEffect(() => {
     if (open) {
@@ -529,7 +529,7 @@ const ConfirmDeleteAssignmentModal = ({
   onConfirm: () => void;
   loading: boolean;
 }) => {
-  const Colors = useColors();
+  const Colors = getColors();
   if (!open) return null;
 
   return (
@@ -633,7 +633,7 @@ const AddSectionV2 = ({
   const [deletingAssignment, setDeletingAssignment] = useState(false);
   const [assignmentRefetchKey, setAssignmentRefetchKey] = useState(0);
   const [bulkUploadAssignmentId, setBulkUploadAssignmentId] = useState<string | null>(null);
-  const Colors = useColors();
+  const Colors = getColors();
 
   const handleDeleteTopic = async () => {
     if (!topicToDelete) return;
@@ -1229,3 +1229,5 @@ const AddSectionV2 = ({
 };
 
 export default AddSectionV2;
+
+

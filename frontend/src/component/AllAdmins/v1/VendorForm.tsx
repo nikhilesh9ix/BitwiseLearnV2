@@ -2,7 +2,7 @@
 
 import React, { use, useState } from "react";
 import { X } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type Props = {
   openForm: (value: boolean) => void;
@@ -16,7 +16,7 @@ type AuthFormData = {
 };
 
 const TOTAL_STEPS = 2;
-const Colors = useColors();
+const Colors = getColors();
 
 export default function VendorForm({ openForm, onSubmit }: Props) {
   const [step, setStep] = useState(1);
@@ -158,3 +158,5 @@ function Input({
     </div>
   );
 }
+
+

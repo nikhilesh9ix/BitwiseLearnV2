@@ -1,7 +1,7 @@
 "use client";
 
 import MDEditor from "@uiw/react-md-editor";
-import { useColors } from "../general/(Color Manager)/useColors";
+import { getColors } from "../general/(Color Manager)/useColors";
 import React from "react";
 
 type Mode = "live" | "preview" | "edit";
@@ -30,7 +30,7 @@ export default function MarkdownEditor({
   hideToolbar: boolean;
   theme: "light" | "dark";
 }) {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div
       style={{
@@ -64,3 +64,5 @@ export default function MarkdownEditor({
     </div>
   );
 }
+
+

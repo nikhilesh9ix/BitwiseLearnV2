@@ -3,11 +3,11 @@ import AllListedQuestions from "./AllListedQuestions";
 import OnGoingingCourses from "./OnGoingingCourses";
 import QuestionInforSidebar from "./QuestionInforSidebar";
 import StudentSideBar from "@/component/general/StudentSidebar";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 
 function V1AllComponents() {
-  const Colors = useColors();
+  const Colors = getColors();
 
   return (
     <div className={`flex h-screen ${Colors.background.primary}`}>
@@ -24,3 +24,5 @@ function V1AllComponents() {
 }
 
 export default V1AllComponents;
+
+

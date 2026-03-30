@@ -1,27 +1,75 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getAllStats } from "@/api/admins/get-admin-stats";
-import { User } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import {
+  User,
+  School,
+  Handshake,
+  ShieldCheck,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+
+import { getAllStats, type AdminDashboardStats } from "@/api/admins/get-admin-stats";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useAdmin } from "@/store/adminStore";
-
-/* ---------------- TYPES ---------------- */
-
-type StatsMap = Record<string, number>;
+import useLogs from "@/lib/useLogs";
 
 type EntityTabsProps = {
   fields: string[];
-  data: StatsMap;
+  data: AdminDashboardStats;
 };
 
-/* ---------------- HEADER ---------------- */
+type EntityMeta = {
+  icon: LucideIcon;
+  label: string;
+  tagline: string;
+  accent: string;
+};
+
+const Colors = getColors();
+
+const URL_MAP: Record<string, string> = {
+  admins: "/admin-dashboard/admins",
+  institutions: "/admin-dashboard/institutions",
+  batches: "/admin-dashboard/batches",
+  vendors: "/admin-dashboard/vendors",
+};
+
+const ENTITY_META: Record<string, EntityMeta> = {
+  admins: {
+    icon: ShieldCheck,
+    label: "Admins",
+    tagline: "People maintaining our platform",
+    accent: "from-orange-500/20 to-orange-500/5",
+  },
+  vendors: {
+    icon: Handshake,
+    label: "Vendors",
+    tagline: "Industry trainers who got involved",
+    accent: "from-emerald-500/20 to-emerald-500/5",
+  },
+  institutions: {
+    icon: School,
+    label: "Institutions",
+    tagline: "Education centers associated with us",
+    accent: "from-blue-500/20 to-blue-500/5",
+  },
+  batches: {
+    icon: Users,
+    label: "Batches",
+    tagline: "Student groups managed across institutions",
+    accent: "from-purple-500/20 to-purple-500/5",
+  },
+};
+
 function Header() {
-  const Colors = useColors();
   const admin = useAdmin();
 
-  if (!admin.info || !admin.info.data) return null;
+  if (!admin.info?.data) {
+    return null;
+  }
 
   const { name, email } = admin.info.data;
 
@@ -50,79 +98,11 @@ function Header() {
   );
 }
 
-/* ---------------- URL MAP ---------------- */
-const URL_MAP: Record<string, string> = {
-  admins: "/admin-dashboard/admins",
-  institutions: "/admin-dashboard/institutions",
-  batches: "/admin-dashboard/batches",
-  vendors: "/admin-dashboard/vendors",
-};
-
-/* ---------------- HERO SECTION ---------------- */
-export default function HeroSection() {
-  const [tabs, setTabs] = useState<StatsMap>({});
-  const [fields, setFields] = useState<string[]>([]);
-
-  useEffect(() => {
-    getAllStats(setTabs);
-  }, []);
-
-  useEffect(() => {
-    setFields(Object.keys(tabs));
-  }, [tabs]);
-
-  return (
-    <>
-      <Header />
-      <EntityTabs fields={fields} data={tabs} />
-    </>
-  );
-}
-
-/* ---------------- ENTITY TABS ---------------- */
-import { School, Handshake, ShieldCheck, Users } from "lucide-react";
-import useLogs from "@/lib/useLogs";
-
-const ENTITY_META: Record<
-  string,
-  {
-    icon: any;
-    label: string;
-    tagline: string;
-    accent: string;
-  }
-> = {
-  admins: {
-    icon: ShieldCheck,
-    label: "Admins",
-    tagline: "People maintaining our platform",
-    accent: "from-orange-500/20 to-orange-500/5",
-  },
-  vendors: {
-    icon: Handshake,
-    label: "Vendors",
-    tagline: "Industry trainers who got involved",
-    accent: "from-emerald-500/20 to-emerald-500/5",
-  },
-  institutions: {
-    icon: School,
-    label: "Institutions",
-    tagline: "Education centers associated with us",
-    accent: "from-blue-500/20 to-blue-500/5",
-  },
-  batches: {
-    icon: Users,
-    label: "Batches",
-    tagline: "Student groups managed across institutions",
-    accent: "from-purple-500/20 to-purple-500/5",
-  },
-};
-
 function EntityTabs({ fields, data }: EntityTabsProps) {
-  const Colors = useColors();
   const { loading, role } = useLogs();
+
   if (!fields.length) {
-    return <p className="text-white/60 text-center mt-6">Loading dashboard…</p>;
+    return <p className="text-white/60 text-center mt-6">Loading dashboard...</p>;
   }
 
   return (
@@ -130,12 +110,17 @@ function EntityTabs({ fields, data }: EntityTabsProps) {
       {fields.map((field) => {
         const meta = ENTITY_META[field];
         const href = URL_MAP[field];
-        if (!meta || !href) return null;
 
-        const Icon = meta.icon;
+        if (!meta || !href) {
+          return null;
+        }
+
         if (field === "admins" && !loading && role !== 0) {
           return null;
         }
+
+        const Icon = meta.icon;
+
         return (
           <Link
             key={field}
@@ -176,3 +161,22 @@ function EntityTabs({ fields, data }: EntityTabsProps) {
     </div>
   );
 }
+
+export default function HeroSection() {
+  const [tabs, setTabs] = useState<AdminDashboardStats>({});
+
+  useEffect(() => {
+    void getAllStats(setTabs);
+  }, []);
+
+  const fields = useMemo(() => Object.keys(tabs), [tabs]);
+
+  return (
+    <>
+      <Header />
+      <EntityTabs fields={fields} data={tabs} />
+    </>
+  );
+}
+
+

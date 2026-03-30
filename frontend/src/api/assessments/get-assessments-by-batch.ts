@@ -1,22 +1,44 @@
 import axiosInstance from "@/lib/axios";
-import toast from "react-hot-toast";
+import { resolveApiData, type StateSetter } from "@/lib/api";
 
-export const getAssessmentsByBatch = async (statefn: any, paramId: string) => {
-  try {
-    const getAssessments = await axiosInstance.get(
-      "/api/v1/assessments/get-assessment-by-batch/" + paramId,
-    );
-    statefn(getAssessments.data?.data || []);
-  } catch (error) {
-    toast.error("error getting assessments");
-  }
+export type AssessmentListItem = {
+  id: string;
+  name: string;
+  description: string;
+  instruction?: string;
+  instructions?: string;
+  startTime: string;
+  endTime: string;
+  individualSectionTimeLimit?: number;
+  status?: "UPCOMING" | "LIVE" | "ENDED";
+  batchId: string;
+  canAccessTest?: boolean;
 };
-export const getAssessmentsByInstitution = async (
-  statefn: any,
+
+export const getAssessmentsByBatch = async (
+  stateFn: StateSetter<AssessmentListItem[]>,
   paramId: string,
-) => {
-  const getAssessments = await axiosInstance.get(
-    "/api/v1/assessments/get-assessment-by-institution/" + paramId,
+): Promise<AssessmentListItem[]> =>
+  resolveApiData(
+    axiosInstance.get(`/api/v1/assessments/get-assessment-by-batch/${paramId}`),
+    {
+      fallbackMessage: "Error getting assessments",
+      fallbackValue: [],
+      stateSetter: stateFn,
+    },
   );
-  statefn(getAssessments.data?.data || []);
-};
+
+export const getAssessmentsByInstitution = async (
+  stateFn: StateSetter<AssessmentListItem[]>,
+  paramId: string,
+): Promise<AssessmentListItem[]> =>
+  resolveApiData(
+    axiosInstance.get(
+      `/api/v1/assessments/get-assessment-by-institution/${paramId}`,
+    ),
+    {
+      fallbackMessage: "Error getting assessments",
+      fallbackValue: [],
+      stateSetter: stateFn,
+    },
+  );

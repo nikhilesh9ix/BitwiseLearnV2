@@ -5,7 +5,7 @@ import { ChevronLeft, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import AddAssessmentCode from "./AddCODEAssessmentQuestion";
 import AddAssessmentMCQ from "./AddMCQAssessmentQuestion";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 // all the api's for this component
 import { createAssessmentSection } from "@/api/assessments/create-assessment-section";
@@ -66,7 +66,7 @@ interface AddSectionModalProps {
   }) => void;
 }
 
-const Colors = useColors();
+const Colors = getColors();
 
 const AddSectionModal = ({ open, onClose, onSubmit }: AddSectionModalProps) => {
   const [form, setForm] = useState({
@@ -1366,3 +1366,5 @@ const AssessmentBuilderV1 = ({ assessmentId }: BuilderProps) => {
 };
 
 export default AssessmentBuilderV1;
+
+

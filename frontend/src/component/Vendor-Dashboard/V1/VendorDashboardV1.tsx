@@ -2,10 +2,10 @@
 
 import SideBar from "@/component/general/SideBar";
 import HeroSection from "./HeroSection";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 export default function VendorDashboardV1() {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
@@ -18,3 +18,5 @@ export default function VendorDashboardV1() {
     </div>
   );
 }
+
+

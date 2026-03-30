@@ -4,7 +4,7 @@ import {
   getCourseEnrollments,
   getInstituteEnrollments,
 } from "@/api/courses/course/enrollments/get-all-enrollment";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useAdmin } from "@/store/adminStore";
 import { useInstitution } from "@/store/institutionStore";
 import {
@@ -50,7 +50,7 @@ function CourseEnrollmentV1({ courseId }: { courseId: string }) {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [courseInfo, setCourseInfo] = useState<CourseInfo>({});
   const [loading, setLoading] = useState(true);
-  const Colors = useColors();
+  const Colors = getColors();
   const router = useRouter();
   // 🔎 Filters
   const [search, setSearch] = useState("");
@@ -314,3 +314,5 @@ function CourseEnrollmentV1({ courseId }: { courseId: string }) {
 }
 
 export default CourseEnrollmentV1;
+
+

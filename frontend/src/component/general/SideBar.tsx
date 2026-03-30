@@ -12,7 +12,7 @@ import {
   Terminal,
 } from "lucide-react";
 import ThemeSwitcher from "./(Color Manager)/ThemeSwitcher";
-import { useColors } from "./(Color Manager)/useColors";
+import { getColors } from "./(Color Manager)/useColors";
 import { useRole } from "./useRole";
 import { useRouter } from "next/navigation";
 import { logoutUser } from "@/lib/logout";
@@ -22,7 +22,7 @@ const MIN_WIDTH = 60;
 const MAX_WIDTH = 420;
 
 export default function SideBar() {
-  const Colors = useColors();
+  const Colors = getColors();
   const role = useRole();
   const { loading: logsLoading, role: logRole } = useLogs();
   const [width, setWidth] = useState(220);
@@ -211,7 +211,7 @@ export default function SideBar() {
     label: string;
     collapsed: boolean;
   }) {
-    const Colors = useColors();
+    const Colors = getColors();
 
     return (
       <Link href={href} className="block">
@@ -230,3 +230,5 @@ export default function SideBar() {
     );
   }
 }
+
+

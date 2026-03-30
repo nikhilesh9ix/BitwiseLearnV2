@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { createStudent } from "@/api/students/create-student";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type StudentFormData = {
   name: string;
@@ -226,7 +226,7 @@ function Input({
   label: string;
   error?: string;
 }) {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div>
       <Label>{label}</Label>
@@ -240,3 +240,5 @@ function Input({
 }
 
 export default BatchStudentForm;
+
+

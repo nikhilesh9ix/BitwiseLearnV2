@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { X, Pencil, Trash2 } from "lucide-react";
 import { deleteEntity, updateEntity } from "@/api/institutions/entity";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import toast from "react-hot-toast";
 
 type UserData = {
@@ -49,7 +49,7 @@ export default function DashboardInfo({ data }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserData | null>(null);
   const [isDisabled, setIsDisabled] = useState(false);
-  const Colors = useColors();
+  const Colors = getColors();
 
   /* ------------------ HANDLERS ------------------ */
 
@@ -289,3 +289,5 @@ export default function DashboardInfo({ data }: Props) {
     </>
   );
 }
+
+

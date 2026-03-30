@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type TestCase = {
   id: string;
@@ -27,7 +27,7 @@ function TestCases({
   output: OutputCase[];
   tab: "example" | "output";
 }) {
-  const Colors = useColors();
+  const Colors = getColors();
 
   const [mode, setMode] = useState<"example" | "output">("example");
   const [activeCase, setActiveCase] = useState(0);
@@ -193,7 +193,38 @@ function TestCases({
                   (() => {
                     const o = output[activeCase];
                     const parsedInput = o.input;
-                    console.log(parsedInput);
+
+                    if (o.compileOutput) {
+                      return (
+                        <div className="rounded-xl p-4 space-y-3 border border-red-500/40 bg-red-500/5 shadow-[0_0_20px_rgba(239,68,68,0.15)]">
+                          <div className="flex justify-between items-center">
+                            <span className={`text-xs ${Colors.text.secondary}`}>
+                              Compiler Result
+                            </span>
+                            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-red-500/20 text-red-400">
+                              Error
+                            </span>
+                          </div>
+
+                          <div>
+                            <p className={`mb-1 text-xs ${Colors.text.secondary}`}>
+                              Compiler Error
+                            </p>
+                            <pre
+                              className={`
+                            rounded-md p-3 font-mono text-sm whitespace-pre-wrap
+                            ${Colors.background.secondary}
+                            ${Colors.border.fadedThin}
+                            text-red-400
+                          `}
+                            >
+                              {o.compileOutput}
+                            </pre>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     return (
                       <div
                         className={`
@@ -293,3 +324,5 @@ ${o.isCorrect ? "text-green-400" : "text-red-400"}
 }
 
 export default TestCases;
+
+

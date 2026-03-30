@@ -4,14 +4,14 @@ import { useState } from "react";
 import { ChevronRight, Lightbulb } from "lucide-react";
 import TestCaseSection from "./TestcaseSection";
 import MarkdownEditor from "@/component/ui/MarkDownEditor";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
 
 function Description({ content }: { content: any }) {
   if (!content) return null;
 
   const { name, description, hints, testCases, problemTopics } = content;
-  const colors = useColors();
+  const colors = getColors();
   const theme = useTheme();
 
   return (
@@ -142,7 +142,7 @@ export default Description;
 
 function HintItem({ hint, index }: { hint: string; index: number }) {
   const [open, setOpen] = useState(false);
-  const colors = useColors();
+  const colors = getColors();
 
   return (
     <div
@@ -212,3 +212,5 @@ function HintItem({ hint, index }: { hint: string; index: number }) {
     </div>
   );
 }
+
+

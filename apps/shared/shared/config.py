@@ -1,10 +1,15 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import PyMongoError
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
+
     DATABASE_URL: str = ""
     MONGO_SERVER_SELECTION_TIMEOUT_MS: int = 8000
     JWT_ACCESS_SECRET: str = "access-secret-change-me"
@@ -26,10 +31,6 @@ class Settings(BaseSettings):
 
     MQ_CLIENT: str = "amqp://guest:guest@localhost/"
     CODE_EXECUTION_SERVER: str = "http://localhost:2000/"
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
 
 
 @lru_cache()

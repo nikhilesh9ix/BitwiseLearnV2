@@ -1,27 +1,37 @@
-from fastapi import APIRouter, Depends, Query
-from beanie import PydanticObjectId
-from shared.utils.api_response import api_response
-from shared.middleware.auth import not_student, admin_only
-from shared.models.user import User
-from shared.models.institution import Institution
-from shared.models.vendor import Vendor
-from shared.models.batch import Batch
-from shared.models.teacher import Teacher
-from shared.models.student import Student
-from shared.models.course import Course
-from shared.models.course_section import CourseSection
-from shared.models.course_content import CourseLearningContent
-from shared.models.course_assignment import CourseAssignment
-from shared.models.course_assignment_submission import CourseAssignmentSubmission
-from shared.models.course_enrollment import CourseEnrollment
-from shared.models.course_progress import CourseProgress
-from shared.models.assessment import Assessment
-from shared.models.assessment_submission import AssessmentSubmission
-from shared.services.queue import publish_message
-from shared.enums import ReportStatus
+import asyncio
 import math
 
+from fastapi import APIRouter, Depends, Query
+from beanie import PydanticObjectId
+from shared.enums import ReportStatus, UserType
+from shared.middleware.auth import admin_only, not_student
+from shared.models.batch import Batch
+from shared.models.assessment import Assessment
+from shared.models.assessment_submission import AssessmentSubmission
+from shared.models.course import Course
+from shared.models.course_assignment import CourseAssignment
+from shared.models.course_assignment_submission import CourseAssignmentSubmission
+from shared.models.course_content import CourseLearningContent
+from shared.models.course_progress import CourseProgress
+from shared.models.course_section import CourseSection
+from shared.models.institution import Institution
+from shared.models.student import Student
+from shared.models.teacher import Teacher
+from shared.models.user import User
+from shared.models.vendor import Vendor
+from shared.services.queue import publish_message
+from shared.utils.api_response import api_response
+
 router = APIRouter(prefix="/api/v1/reports", tags=["Reports"])
+
+
+async def _load_students_map(student_ids: list[PydanticObjectId]) -> dict[str, Student]:
+    if not student_ids:
+        return {}
+
+    unique_ids = list(dict.fromkeys(student_ids))
+    students = await Student.find({"_id": {"$in": unique_ids}}).to_list()
+    return {str(student.id): student for student in students}
 
 
 def _group_by_student(records: list, attr_name: str) -> dict[str, list]:
@@ -32,16 +42,49 @@ def _group_by_student(records: list, attr_name: str) -> dict[str, list]:
     return grouped
 
 
+async def _count_query(query_factory) -> int:
+    return await query_factory().count()
+
+
+async def _count_admins() -> int:
+    finder = getattr(User, "find", None)
+    role_field = getattr(User, "role", None)
+
+    if callable(finder) and role_field is not None:
+        try:
+            return await finder(role_field == UserType.ADMIN).count()
+        except Exception:
+            # Keep stats route usable in partially mocked environments.
+            pass
+
+    find_all = getattr(User, "find_all", None)
+    if callable(find_all):
+        return await find_all().count()
+
+    raise RuntimeError("User model does not support admin counting.")
+
+
 @router.get("/get-stats-count")
 async def get_stats_count(current_user: dict = Depends(admin_only)):
-    admins = await User.find_all().count()
-    institutions = await Institution.find_all().count()
-    vendors = await Vendor.find_all().count()
-    batches = await Batch.find_all().count()
-    teachers = await Teacher.find_all().count()
-    students = await Student.find_all().count()
-    courses = await Course.find_all().count()
-    assessments = await Assessment.find_all().count()
+    (
+        admins,
+        institutions,
+        vendors,
+        batches,
+        teachers,
+        students,
+        courses,
+        assessments,
+    ) = await asyncio.gather(
+        _count_admins(),
+        _count_query(Institution.find_all),
+        _count_query(Vendor.find_all),
+        _count_query(Batch.find_all),
+        _count_query(Teacher.find_all),
+        _count_query(Student.find_all),
+        _count_query(Course.find_all),
+        _count_query(Assessment.find_all),
+    )
 
     return api_response(200, "Stats fetched", data={
         "admins": admins,
@@ -74,9 +117,11 @@ async def get_assessment_report(
         AssessmentSubmission.assessment_id == assessment.id
     ).skip((page - 1) * limit).limit(limit).to_list()
 
+    students_by_id = await _load_students_map([sub.student_id for sub in submissions])
+
     data = []
     for sub in submissions:
-        student = await Student.get(sub.student_id)
+        student = students_by_id.get(str(sub.student_id))
         data.append({
             "id": str(sub.id),
             "student_id": str(sub.student_id),

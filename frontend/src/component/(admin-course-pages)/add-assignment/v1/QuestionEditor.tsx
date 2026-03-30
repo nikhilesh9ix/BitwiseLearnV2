@@ -4,9 +4,9 @@ import toast from "react-hot-toast";
 import { Trash2 } from "lucide-react";
 import { deleteAssignmentQuestion } from "@/api/courses/assignment-questions/delete-question";
 import { useState } from "react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
-const Colors = useColors();
+const Colors = getColors();
 
 export default function QuestionEditor({
   assignmentId,
@@ -335,3 +335,5 @@ export default function QuestionEditor({
     </div>
   );
 }
+
+

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
 
@@ -27,7 +27,7 @@ function QuestionCard({
     if (typeof topic?.tagName === "string") return [topic.tagName];
     return [];
   });
-  const Colors = useColors();
+  const Colors = getColors();
 
   return (
     <div
@@ -99,3 +99,5 @@ function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
 }
 
 export default QuestionCard;
+
+

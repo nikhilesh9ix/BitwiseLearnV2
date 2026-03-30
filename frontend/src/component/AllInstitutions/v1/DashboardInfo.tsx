@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type EntityData = {
   id: string;
@@ -24,7 +24,7 @@ function formatDate(date?: string) {
 
 function DashboardInfo({ data }: Props) {
   const router = useRouter();
-  const Colors = useColors();
+  const Colors = getColors();
 
   const handleSeeDetails = (institutionId: string) => {
     router.push(`/admin-dashboard/institutions/${institutionId}`);
@@ -98,3 +98,5 @@ function DashboardInfo({ data }: Props) {
 }
 
 export default DashboardInfo;
+
+

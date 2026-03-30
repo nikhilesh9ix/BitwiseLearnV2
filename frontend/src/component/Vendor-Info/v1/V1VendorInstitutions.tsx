@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 import InstitutionForm from "./InstitutionForm";
 import { createInstitution } from "@/api/institutions/create-institution";
 import toast from "react-hot-toast";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type V1VendorInstitutionsProps = {
   vendorId: string;
@@ -17,7 +17,7 @@ function V1VendorInstitutions({ vendorId }: V1VendorInstitutionsProps) {
   const [data, setData] = useState<any>([]);
   const [addNew, setAddNew] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
-  const Colors = useColors();
+  const Colors = getColors();
 
   useEffect(() => {
     getVendorInstitutions(setData, vendorId);
@@ -63,3 +63,5 @@ function V1VendorInstitutions({ vendorId }: V1VendorInstitutionsProps) {
 }
 
 export default V1VendorInstitutions;
+
+

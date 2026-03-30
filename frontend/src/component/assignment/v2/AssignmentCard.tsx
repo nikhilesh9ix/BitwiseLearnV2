@@ -4,10 +4,10 @@ import { Clock, ClipboardList } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import type { AssignmentCardData } from "./AssignmentV2";
 
-const Colors = useColors();
+const Colors = getColors();
 
 export default function AssignmentCard({
   assignment,
@@ -147,3 +147,5 @@ export default function AssignmentCard({
     </>
   );
 }
+
+

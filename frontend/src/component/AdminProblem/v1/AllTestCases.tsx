@@ -10,7 +10,7 @@ import { createTestCase } from "@/api/problems/create-testcase";
 import { updateProblemTestcase } from "@/api/problems/update-testcase";
 import { uploadBatches } from "@/api/batches/create-batches";
 import toast from "react-hot-toast";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import Link from "next/link";
 //@ts-ignore
 import testcaseFormat from "@/../public/testcase.ods";
@@ -27,7 +27,7 @@ type TestCase = {
 export default function AllTestCases() {
   const param = useParams();
   const problemId = param.id as string;
-  const Colors = useColors();
+  const Colors = getColors();
 
   const [data, setData] = useState<TestCase[]>([]);
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | null>(
@@ -206,7 +206,7 @@ function EditableTestCaseSidebar({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const Colors = useColors();
+  const Colors = getColors();
 
   const [testType, setTestType] = useState(testCase.testType);
   const [input, setInput] = useState(testCase.input);
@@ -353,7 +353,7 @@ function truncate(text: string, length: number) {
 }
 
 function Detail({ label, value }: { label: string; value: string }) {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div>
       <p className={`text-xs ${Colors.text.secondary} mb-1`}>{label}</p>
@@ -363,7 +363,7 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 function DetailJSON({ label, value }: { label: string; value: string }) {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div>
       <p className={`text-xs ${Colors.text.secondary} mb-1`}>{label}</p>
@@ -383,3 +383,5 @@ function DetailJSON({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+

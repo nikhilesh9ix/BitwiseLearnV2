@@ -47,6 +47,16 @@ export function useRole() {
 
   useEffect(() => {
     setRole(getStoredRole());
+
+    const syncRole = () => {
+      setRole(getStoredRole());
+    };
+
+    window.addEventListener("storage", syncRole);
+
+    return () => {
+      window.removeEventListener("storage", syncRole);
+    };
   }, []);
 
   return role?.toLowerCase() || null;

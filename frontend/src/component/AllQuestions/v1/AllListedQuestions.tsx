@@ -4,14 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import Filter from "./Filter";
 import QuestionCard from "./QuestionCard";
 import { getAllProblemData } from "@/api/problems/get-all-problems";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type Difficulty = "easy" | "medium" | "hard" | null;
 type Status = "solved" | "unsolved" | null;
 
 function AllListedQuestions() {
   const [questions, setQuestions] = useState<any[]>([]);
-  const Colors = useColors();
+  const Colors = getColors();
   /* ---------------- FILTER STATE ---------------- */
   const [query, setQuery] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>(null);
@@ -75,3 +75,5 @@ function AllListedQuestions() {
 }
 
 export default AllListedQuestions;
+
+

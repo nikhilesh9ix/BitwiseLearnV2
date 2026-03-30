@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
 import { loadProfile } from "@/api/problems/load-profile";
 
 const RADIUS = 80;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-const Colors = useColors();
+const Colors = getColors();
 
 function QuestionInfoSidebar() {
   const [question, setQuestion] = useState({
@@ -198,3 +198,5 @@ function StatRow({
 }
 
 export default QuestionInfoSidebar;
+
+

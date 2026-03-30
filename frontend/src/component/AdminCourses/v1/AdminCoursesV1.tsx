@@ -5,10 +5,10 @@ import RightSection from "./RightSection";
 
 import { Course } from "./CourseCard";
 import SideBar from "@/component/general/SideBar";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 export default function AdminCoursesV1() {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
@@ -21,3 +21,5 @@ export default function AdminCoursesV1() {
     </div>
   );
 }
+
+

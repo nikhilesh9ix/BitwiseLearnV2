@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { User, Plus } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import useVendor from "@/store/vendorStore";
 import { getVendorDashboard } from "@/api/vendors/get-vendor-dashboard";
 import { getAllInstitutions } from "@/api/institutions/get-all-institutions";
@@ -14,7 +14,7 @@ import { createInstitution } from "@/api/institutions/create-institution";
 import toast from "react-hot-toast";
 
 function Header({ name, email, tagline }: any) {
-  const Colors = useColors();
+  const Colors = getColors();
 
   return (
     <div className="flex justify-between p-4">
@@ -45,7 +45,7 @@ function Header({ name, email, tagline }: any) {
 }
 
 export default function HeroSection() {
-  const Colors = useColors();
+  const Colors = getColors();
   const vendor = useVendor();
   const setVendor = useVendor((s) => s.setData);
 
@@ -128,3 +128,5 @@ export default function HeroSection() {
     </>
   );
 }
+
+

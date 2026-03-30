@@ -4,7 +4,7 @@ import { User } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import ProblemSubmissionForm from "./ProblemSubmissionForm";
 import { getAllProblemCount } from "@/api/problems/get-problem-count";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useRole } from "@/component/general/useRole";
 import useLogs from "@/lib/useLogs";
 import useVendor from "@/store/vendorStore";
@@ -38,7 +38,7 @@ function HeroSection({
   showForm: boolean;
   setShowForm: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const Colors = useColors();
+  const Colors = getColors();
   const { loading: logsLoading, role: logRole } = useLogs();
   const role = useRole();
 
@@ -191,3 +191,5 @@ function StatCard({
     </div>
   );
 }
+
+

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/component/ui/tabs";
 import Submission from "./Submission";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 type ProblemViewData = {
   id: string;
   solution?: string;
@@ -18,7 +18,7 @@ type ProblemViewData = {
 };
 
 function V1Problem({ data }: { data: ProblemViewData }) {
-  const Colors = useColors();
+  const Colors = getColors();
 
   /* Sidebar */
   const [sidebarWidth, setSidebarWidth] = useState(720);
@@ -194,3 +194,5 @@ function V1Problem({ data }: { data: ProblemViewData }) {
 }
 
 export default V1Problem;
+
+

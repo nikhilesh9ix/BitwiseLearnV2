@@ -2,11 +2,11 @@
 
 import MDEditor from "@uiw/react-md-editor";
 import { PlayCircle, FileText } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
 
 function Solution({ content }: any) {
-  const Colors = useColors();
+  const Colors = getColors();
   const theme = useTheme();
   const isDark = theme.theme === "Dark";
 
@@ -129,3 +129,5 @@ function Solution({ content }: any) {
 }
 
 export default Solution;
+
+

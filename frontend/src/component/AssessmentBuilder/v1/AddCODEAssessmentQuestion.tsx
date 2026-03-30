@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { searchProblem } from "@/api/problems/search-problem";
 import { createQuestion } from "@/api/assessments/create-question";
 
@@ -38,7 +37,10 @@ const AddAssessmentCode = ({
     try {
       setLoading(true);
       const res = await searchProblem(query);
-      setQuestions(res.data.data);
+      const rawQuestions = res?.data?.data ?? res?.data;
+      setQuestions(Array.isArray(rawQuestions) ? rawQuestions : []);
+    } catch {
+      setQuestions([]);
     } finally {
       setLoading(false);
     }

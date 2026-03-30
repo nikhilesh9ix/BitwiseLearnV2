@@ -7,7 +7,7 @@ import { Editor } from "@monaco-editor/react";
 import ShowAddTemplateForm from "./ShowAddTemplateForm";
 import { createProblemTemplate } from "@/api/problems/create-template";
 import { updateProblemTemplate } from "@/api/problems/update-tempate";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
 
 type Template = {
@@ -28,7 +28,7 @@ const LANGUAGE_MAP: Record<string, string> = {
 
 function Templates() {
   const param = useParams();
-  const Colors = useColors();
+  const Colors = getColors();
   const { theme } = useTheme();
 
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -285,3 +285,5 @@ function Templates() {
 }
 
 export default Templates;
+
+

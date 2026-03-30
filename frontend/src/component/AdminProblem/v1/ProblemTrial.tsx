@@ -2,7 +2,7 @@
 import CodeEditor from "@/component/Problem/v1/Editor";
 import TestCases from "@/component/Problem/v1/TestCases";
 import React, { useRef, useState } from "react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 function ProblemTrial({ data }: { data: any }) {
   const [output, setOutput] = useState([]);
@@ -15,7 +15,7 @@ function ProblemTrial({ data }: { data: any }) {
     isEditorResizing.current = true;
     document.body.style.cursor = "row-resize";
   };
-  const Colors = useColors();
+  const Colors = getColors();
 
   return (
     <>
@@ -56,3 +56,5 @@ function ProblemTrial({ data }: { data: any }) {
 }
 
 export default ProblemTrial;
+
+

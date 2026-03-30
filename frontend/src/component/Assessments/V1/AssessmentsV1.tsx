@@ -18,7 +18,7 @@ import { createAssessments } from "@/api/assessments/create-assessments";
 import { getAllAssessments } from "@/api/assessments/get-all-assessments";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useColors } from "../../general/(Color Manager)/useColors";
+import { getColors } from "../../general/(Color Manager)/useColors";
 import { getAllInstitutions } from "@/api/institutions/get-all-institutions";
 import { getAllBatches } from "@/api/batches/get-all-batches";
 import { useStudent } from "@/store/studentStore";
@@ -28,7 +28,7 @@ import { useAdmin } from "@/store/adminStore";
 import useLogs from "@/lib/useLogs";
 
 // colors ------------------------------------------------------------------
-const Colors = useColors();
+const Colors = getColors();
 
 // types -------------------------------------------------------------------
 type CreateAssessment = {
@@ -818,3 +818,5 @@ const AssessmentsV1 = () => {
 };
 
 export default AssessmentsV1;
+
+

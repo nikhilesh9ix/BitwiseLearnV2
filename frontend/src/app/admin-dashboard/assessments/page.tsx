@@ -1,9 +1,9 @@
 import Assessments from "@/component/Assessments/Assessments";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import SideBar from "@/component/general/SideBar";
 
 const page = () => {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div className="flex h-screen overflow-hidden ">
       <SideBar />
@@ -15,3 +15,5 @@ const page = () => {
 };
 
 export default page;
+
+

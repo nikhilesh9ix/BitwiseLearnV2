@@ -1,38 +1,46 @@
 "use client";
-import { getAllAdmins } from "@/api/admins/get-all-admins";
+
+import React, { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
+import toast from "react-hot-toast";
+
+import { getColors } from "@/component/general/(Color Manager)/useColors";
+import { getAllAdmins, type AdminListItem } from "@/api/admins/get-all-admins";
+import {
+  createAdmin,
+  type CreateAdminPayload,
+} from "@/api/admins/create-admin";
 import Filter from "@/component/general/Filter";
 import SideBar from "@/component/general/SideBar";
-import React, { useEffect, useState } from "react";
 import DashboardInfo from "./DashboardInfo";
-import { Plus } from "lucide-react";
 import AdminForm from "./AdminForm";
-import { createAdmin } from "@/api/admins/create-admin";
-import toast from "react-hot-toast";
-import VendorForm from "./VendorForm";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+
+const Colors = getColors();
 
 function V1AllAdmins() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<AdminListItem[]>([]);
   const [addNew, setAddNew] = useState(false);
-  const [filteredData, setFilteredData] = useState([]);
-  const Colors = useColors();
+  const [filteredData, setFilteredData] = useState<AdminListItem[]>([]);
+
   useEffect(() => {
-    getAllAdmins(setData);
+    void getAllAdmins(setData);
   }, []);
-  const handleCreateAdmin = async (data: any) => {
+
+  const handleCreateAdmin = async (payload: CreateAdminPayload) => {
     const toastId = toast.loading("Creating Admin...");
+
     try {
-      await createAdmin(data);
+      await createAdmin(payload);
       setAddNew(false);
       toast.success("Admin Created Successfully", { id: toastId });
       await getAllAdmins(setData);
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.error || err?.message || "Error creating Admin",
-        { id: toastId },
-      );
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Error creating Admin";
+      toast.error(message, { id: toastId });
     }
   };
+
   return (
     <div className={`flex ${Colors.background.primary}`}>
       {addNew && (
@@ -52,15 +60,17 @@ function V1AllAdmins() {
             onClick={() => setAddNew(true)}
             className={`${Colors.text.special} flex gap-2 border-primaryBlue border p-2 rounded-xl cursor-pointer ${Colors.hover.special} transition`}
           >
-            <Plus className={`${Colors.text.special}`} />
+            <Plus className={Colors.text.special} />
             Add Admins
           </button>
         </div>
         <Filter data={data} setFilteredData={setFilteredData} />
-        <DashboardInfo data={filteredData as any} />
+        <DashboardInfo data={filteredData} />
       </div>
     </div>
   );
 }
 
 export default V1AllAdmins;
+
+

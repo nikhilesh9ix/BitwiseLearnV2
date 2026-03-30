@@ -2,7 +2,7 @@ import { use, useEffect, useState } from "react";
 import { Pencil, Save, X, Trash, ArrowLeft } from "lucide-react";
 import InfoBlock from "./InfoBlock";
 import { deleteEntity, updateEntity } from "@/api/institutions/entity";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useRouter } from "next/navigation";
 import useVendor from "@/store/vendorStore";
 
@@ -12,7 +12,7 @@ type InstitutionSidebarProps = {
   onDelete?: (id: string) => void;
 };
 
-const Colors = useColors();
+const Colors = getColors();
 
 const formatDate = (dateString: string | Date): string => {
   const date = new Date(dateString);
@@ -242,3 +242,5 @@ const InstitutionSidebar = ({
 };
 
 export default InstitutionSidebar;
+
+

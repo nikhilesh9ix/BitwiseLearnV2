@@ -1,7 +1,7 @@
 "use client";
 import axiosInstance from "@/lib/axios";
 import { Editor } from "@monaco-editor/react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
 import {
   Play,
@@ -216,7 +216,7 @@ function CodeCompiler() {
     return <Skeleton />;
   }
 
-  const Colors = useColors();
+  const Colors = getColors();
   const theme = useTheme();
 
   return (
@@ -460,3 +460,5 @@ function CodeCompiler() {
 }
 
 export default CodeCompiler;
+
+

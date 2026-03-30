@@ -3,7 +3,7 @@
 import { getAllCourses } from "@/api/courses/course/get-all-courses";
 import { enrollInstitutionCourses } from "@/api/courses/course/enrollments/enroll-institution";
 import React, { use, useEffect, useState } from "react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import toast from "react-hot-toast";
 
 interface Course {
@@ -19,7 +19,7 @@ function CourseForm({ batchId }: { batchId: string }) {
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
-  const Colors = useColors();
+  const Colors = getColors();
 
   const handleToggleCourse = (courseId: string) => {
     setSelectedCourses((prev) =>
@@ -121,3 +121,5 @@ function CourseForm({ batchId }: { batchId: string }) {
 }
 
 export default CourseForm;
+
+

@@ -1,11 +1,13 @@
 import axiosInstance from "@/lib/axios";
-import toast from "react-hot-toast";
+import { resolveApiData, type StateSetter } from "@/lib/api";
 
-export const getAllStats = async (stateFn: any) => {
-  try {
-    const data = await axiosInstance.get("/api/v1/reports/get-stats-count");
-    stateFn(data.data.data);
-  } catch (error) {
-    toast.error("error getting stats");
-  }
-};
+export type AdminDashboardStats = Record<string, number>;
+
+export const getAllStats = async (
+  stateFn?: StateSetter<AdminDashboardStats>,
+): Promise<AdminDashboardStats> =>
+  resolveApiData(axiosInstance.get("/api/v1/reports/get-stats-count"), {
+    fallbackMessage: "Error getting stats",
+    fallbackValue: {},
+    stateSetter: stateFn,
+  });

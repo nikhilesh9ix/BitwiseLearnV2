@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Pencil, Trash2 } from "lucide-react";
 import { deleteEntity, updateEntity } from "@/api/institutions/entity";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type CompanyData = {
   id: string;
@@ -49,7 +49,7 @@ export default function DashboardInfo({ data, onUpdate, onDelete }: Props) {
   const [selected, setSelected] = useState<CompanyData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<CompanyData | null>(null);
-  const Colors = useColors();
+  const Colors = getColors();
 
   const handleSeeDetails = (vendorId: string) => {
     router.push(`/admin-dashboard/vendors/${vendorId}`);
@@ -255,3 +255,5 @@ export default function DashboardInfo({ data, onUpdate, onDelete }: Props) {
     </>
   );
 }
+
+

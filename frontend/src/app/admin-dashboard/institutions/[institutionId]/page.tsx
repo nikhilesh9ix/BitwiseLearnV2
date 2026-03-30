@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import InstitutionInfo from "@/component/Institution-info/InstitutionInfo";
 import { getInstituteData } from "@/api/institutions/get-institute-by-id";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 export default function IndividualInstitution() {
   const queryParams = useParams();
@@ -14,7 +14,7 @@ export default function IndividualInstitution() {
     if (!institutionId) return;
     getInstituteData(setInstitution, institutionId);
   }, [institutionId]);
-  const Colors = useColors();
+  const Colors = getColors();
 
   if (!institutionId) {
     return (
@@ -30,3 +30,5 @@ export default function IndividualInstitution() {
 
   return <InstitutionInfo institution={institution} />;
 }
+
+

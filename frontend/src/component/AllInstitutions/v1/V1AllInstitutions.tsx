@@ -8,13 +8,13 @@ import { Plus } from "lucide-react";
 import InstitutionForm from "./InstitutionForm";
 import { createInstitution } from "@/api/institutions/create-institution";
 import toast from "react-hot-toast";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 function V1AllInstitutions() {
   const [data, setData] = useState<any>([]);
   const [addNew, setAddNew] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
-  const Colors = useColors();
+  const Colors = getColors();
   useEffect(() => {
     getAllInstitutions(setData);
   }, []);
@@ -74,3 +74,5 @@ function V1AllInstitutions() {
 }
 
 export default V1AllInstitutions;
+
+

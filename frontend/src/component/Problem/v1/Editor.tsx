@@ -4,7 +4,7 @@ import { runCode, submitCode } from "@/api/problems/run-code";
 import { Editor } from "@monaco-editor/react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Play, Send, Timer, Pause, RotateCcw } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
 import toast from "react-hot-toast";
 
@@ -34,7 +34,7 @@ export default function CodeEditor({
   setTab: any;
   showSubmit: boolean;
 }) {
-  const Colors = useColors();
+  const Colors = getColors();
   const theme = useTheme();
   console.log(template);
   const templatesByLanguage = useMemo(() => {
@@ -88,17 +88,42 @@ export default function CodeEditor({
   /* ------------------------------------------------ */
 
   const handleRun = async () => {
-    setOutput([]);
-    toast.loading("Running TestCase", { id: "run" });
-    resetTimer();
-    const res = await runCode({
-      language,
-      code,
-      questionId,
-    });
-    setOutput(res.testCases || []);
-    setTab("output");
-    toast.success("Execution Completed", { id: "run" });
+    try {
+      setOutput([]);
+      toast.loading("Running TestCase", { id: "run" });
+      resetTimer();
+
+      const res = await runCode({
+        language,
+        code,
+        questionId,
+      });
+
+      const testCases = Array.isArray(res?.testCases) ? res.testCases : [];
+
+      const compileMessage =
+        res?.compileOutput || res?.stderr || res?.error || res?.message;
+
+      if (testCases.length > 0) {
+        setOutput(testCases);
+      } else if (compileMessage) {
+        setOutput([
+          {
+            isCorrect: false,
+            compileOutput: String(compileMessage),
+          },
+        ]);
+      } else {
+        setOutput([]);
+      }
+
+      setTab("output");
+      toast.success("Execution Completed", { id: "run" });
+    } catch {
+      setOutput([]);
+      setTab("output");
+      toast.error("Failed to run code", { id: "run" });
+    }
   };
 
   const handleSubmit = async () => {
@@ -312,3 +337,5 @@ export default function CodeEditor({
     </div>
   );
 }
+
+

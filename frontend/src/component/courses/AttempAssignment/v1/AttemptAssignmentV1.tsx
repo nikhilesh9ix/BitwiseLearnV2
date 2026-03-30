@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { getAssignmentById } from "@/api/courses/assignment/get-assignment-by-id";
 import { submitAssignment } from "@/api/courses/assignment/submit-assignment";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useParams, useRouter } from "next/navigation";
 
 type AnswerMap = {
@@ -13,7 +13,7 @@ type AnswerMap = {
 function AttemptAssignmentV1({ assignmentId }: { assignmentId: string }) {
   const router = useRouter();
   const params = useParams();
-  const Colors = useColors();
+  const Colors = getColors();
 
   const [assignment, setAssignment] = useState<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -357,3 +357,5 @@ function AttemptAssignmentV1({ assignmentId }: { assignmentId: string }) {
 }
 
 export default AttemptAssignmentV1;
+
+

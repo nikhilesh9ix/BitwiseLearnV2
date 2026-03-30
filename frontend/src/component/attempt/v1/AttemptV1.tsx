@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import LeftSection from "./LeftSection";
 import RightSection from "./RightSection";
 import { useRouter } from "next/navigation";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import toast from "react-hot-toast";
 import { Wifi } from "lucide-react";
 
@@ -39,7 +39,7 @@ export default function AttemptV1({
   id: string;
   mode: AttemptMode;
 }) {
-  const Colors = useColors();
+  const Colors = getColors();
   const router = useRouter();
 
   function normalizeAssessmentData(raw: any) {
@@ -525,3 +525,5 @@ useEffect(() => {
     </div>
   );
 }
+
+

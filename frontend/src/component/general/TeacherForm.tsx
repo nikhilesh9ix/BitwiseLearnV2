@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { createTeacher } from "@/api/teachers/create-teacher";
 import { getAllBatches } from "@/api/batches/get-all-batches";
-import { useColors } from "./(Color Manager)/useColors";
+import { getColors } from "./(Color Manager)/useColors";
 type TeacherFormData = {
   name: string;
   email: string;
@@ -39,7 +39,7 @@ export default function TeacherForm({
 
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loadingBatches, setLoadingBatches] = useState(false);
-  const Colors = useColors();
+  const Colors = getColors();
 
   const [errors, setErrors] = useState<
     Partial<Record<keyof TeacherFormData, string>>
@@ -250,7 +250,7 @@ function Input({
   label: string;
   error?: string;
 }) {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div>
       <Label>{label}</Label>
@@ -262,3 +262,5 @@ function Input({
     </div>
   );
 }
+
+

@@ -3,7 +3,7 @@ import BatchSidebar from "./BatchSidebar";
 import { Tabs } from "./Tabs";
 import { EntityList } from "./EntityList";
 import { json } from "stream/consumers";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type BatchInfoProps = {
   batch: any;
@@ -13,7 +13,7 @@ type BatchInfoProps = {
 const BatchInfo = ({ batch, institutionId }: BatchInfoProps) => {
   const [activeTab, setActiveTab] = useState("Teachers");
   const [refreshKey, setRefreshKey] = useState(0);
-  const Colors = useColors();
+  const Colors = getColors();
 
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1);
@@ -41,3 +41,5 @@ const BatchInfo = ({ batch, institutionId }: BatchInfoProps) => {
 };
 
 export default BatchInfo;
+
+

@@ -4,7 +4,7 @@ import StudentForm from "@/component/general/StudentForm";
 import { Plus, X } from "lucide-react";
 import { use, useEffect, useState } from "react";
 import { getAllBatches } from "@/api/batches/get-all-batches";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type Batch = {
   id: string;
@@ -28,7 +28,7 @@ type RenderComponentProps = {
   batches?: Batch[];
 };
 
-const Colors = useColors();
+const Colors = getColors();
 
 const RenderComponent = ({
   value,
@@ -120,3 +120,5 @@ export const Tabs = ({ value, onValueChange, institutionId, onBatchCreated }: Ta
     </>
   );
 };
+
+

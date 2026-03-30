@@ -1,5 +1,5 @@
 import AssessmentBuilderV1 from "@/component/AssessmentBuilder/v1/AssessmentBuilderV1";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import SideBar from "@/component/general/SideBar";
 
 interface PageProps {
@@ -10,7 +10,7 @@ interface PageProps {
 
 const page = async ({ params }: PageProps) => {
   const { id } = await params;
-  const Colors = useColors();
+  const Colors = getColors();
 
   return (
     <div className={`flex h-screen ${Colors.background.primary} overflow-hidden`}>
@@ -23,3 +23,5 @@ const page = async ({ params }: PageProps) => {
 };
 
 export default page;
+
+

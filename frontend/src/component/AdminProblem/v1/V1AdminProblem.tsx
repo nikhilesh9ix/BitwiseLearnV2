@@ -5,13 +5,13 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getAdminProblemData } from "@/api/problems/get-individual-problem";
 import ProblemTrial from "./ProblemTrial";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 function V1AdminProblem() {
   const param = useParams();
   const [data, setData] = useState({});
   const [testMode, setTestMode] = useState(false);
-  const Colors = useColors();
+  const Colors = getColors();
 
   useEffect(() => {
     const problemId = param?.id;
@@ -39,3 +39,5 @@ function V1AdminProblem() {
 }
 
 export default V1AdminProblem;
+
+

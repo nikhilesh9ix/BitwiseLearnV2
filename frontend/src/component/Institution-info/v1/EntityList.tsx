@@ -10,13 +10,13 @@ import { getAllBatches } from "@/api/batches/get-all-batches";
 import { getAllVendors } from "@/api/vendors/get-all-vendors";
 import { deleteEntity, updateEntity } from "@/api/institutions/entity";
 import { getTeacherByInstitute } from "@/api/teachers/get-teachers-by-institute";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 type EntityListProps = {
   type: string;
   institutionId?: string;
 };
 
-const Colors = useColors();
+const Colors = getColors();
 
 export const EntityList = ({ type, institutionId }: EntityListProps) => {
   const router = useRouter();
@@ -318,3 +318,5 @@ export const EntityList = ({ type, institutionId }: EntityListProps) => {
     </>
   );
 };
+
+

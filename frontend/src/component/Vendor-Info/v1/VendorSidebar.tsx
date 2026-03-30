@@ -3,7 +3,7 @@ import { Pencil, Save, X, Trash, ArrowLeft } from "lucide-react";
 import InfoBlock from "./InfoBlock";
 import { deleteEntity, updateEntity } from "@/api/institutions/entity";
 import { useRouter } from "next/navigation";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type VendorSidebarProps = {
   vendor: {
@@ -68,7 +68,7 @@ const InputField = ({
 );
 
 const VendorSidebar = ({ vendor }: VendorSidebarProps) => {
-  const Colors = useColors();
+  const Colors = getColors();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(vendor);
   const router = useRouter();
@@ -238,3 +238,5 @@ const VendorSidebar = ({ vendor }: VendorSidebarProps) => {
 };
 
 export default VendorSidebar;
+
+

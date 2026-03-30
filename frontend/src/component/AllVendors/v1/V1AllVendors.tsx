@@ -8,7 +8,7 @@ import { Plus } from "lucide-react";
 import VendorForm from "./VendorForm";
 import { createVendors } from "@/api/vendors/create-vendors";
 import toast from "react-hot-toast";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 function V1AllVendors() {
   const [data, setData] = useState<any>([]);
@@ -34,7 +34,7 @@ function V1AllVendors() {
       // console.error(err);
     }
   };
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div className={`flex ${Colors.background.primary}`}>
       {addNew && (
@@ -69,3 +69,5 @@ function V1AllVendors() {
 }
 
 export default V1AllVendors;
+
+

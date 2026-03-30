@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { User, Clock, Search } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useStudent } from "@/store/studentStore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -41,7 +41,7 @@ function normalizeLevel(level: string): CourseLevel {
 
 /* ---------------- HEADER ---------------- */
 function Header({ name, email }: { name: string; email: string }) {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div className="flex justify-between p-4">
       <div>
@@ -69,7 +69,7 @@ function Header({ name, email }: { name: string; email: string }) {
 
 /* ---------------- HERO SECTION ---------------- */
 export default function HeroSection() {
-  const Colors = useColors();
+  const Colors = getColors();
   const student = useStudent();
   const studentData =
     (student.info as { data?: { name?: string; email?: string; batch?: { id?: string } }; name?: string; email?: string; batch?: { id?: string } } | null)
@@ -225,7 +225,7 @@ export default function HeroSection() {
 }
 
 function CourseCard({ course }: { course: Course }) {
-  const Colors = useColors();
+  const Colors = getColors();
   const router = useRouter();
 
   const levelStyles =
@@ -380,3 +380,5 @@ function CourseCard({ course }: { course: Course }) {
 //     </div>
 //   );
 // }
+
+

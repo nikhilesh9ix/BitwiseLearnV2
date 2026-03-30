@@ -1,6 +1,6 @@
 "use client";
 
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { Search } from "lucide-react";
 
 
@@ -16,7 +16,7 @@ type FilterProps = {
   setStatus: (v: Status) => void;
 };
 
-const Colors = useColors();
+const Colors = getColors();
 
 function Filter({
   query,
@@ -126,3 +126,5 @@ function FilterPill({
 }
 
 export default Filter;
+
+

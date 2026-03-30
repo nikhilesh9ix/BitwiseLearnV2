@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 export default function TestCaseForm({
   onClose,
@@ -20,7 +20,7 @@ export default function TestCaseForm({
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<{ input?: string; output?: string }>({});
 
-  const Colors = useColors();
+  const Colors = getColors();
 
   /* ---------------- SAVE ---------------- */
   const handleSave = async () => {
@@ -160,3 +160,5 @@ export default function TestCaseForm({
     </div>
   );
 }
+
+

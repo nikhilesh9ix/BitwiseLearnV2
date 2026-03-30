@@ -1,12 +1,12 @@
 import { Facebook, Github, Instagram, Linkedin } from "lucide-react";
 import Link from "next/link";
 import BitwiseImage from "@/app/images/BitwiseImage.png";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import Image from "next/image";
 import logo from "../../../public/images/Logo.png";
 
 export default function Footer() {
-  const Colors = useColors();
+  const Colors = getColors();
 
   return (
     <footer
@@ -109,3 +109,5 @@ export default function Footer() {
     </footer>
   );
 }
+
+

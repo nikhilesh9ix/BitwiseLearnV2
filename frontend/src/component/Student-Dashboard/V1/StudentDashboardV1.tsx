@@ -1,11 +1,11 @@
 "use client";
 
 import HeroSection from "./HeroSection";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import StudentSideBar from "@/component/general/StudentSidebar";
 
 export default function StudentDashboardV1() {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
@@ -19,3 +19,5 @@ export default function StudentDashboardV1() {
     </div>
   );
 }
+
+

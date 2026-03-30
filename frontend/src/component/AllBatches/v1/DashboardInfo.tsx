@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type BatchData = {
   id: string;
@@ -23,7 +23,7 @@ function formatDate(date: string) {
 
 function DashboardInfo({ data }: Props) {
   const router = useRouter();
-  const Colors = useColors();
+  const Colors = getColors();
 
   const handleSeeDetails = (batchId: string) => {
     router.push(`/admin-dashboard/batches/${batchId}`);
@@ -96,3 +96,5 @@ function DashboardInfo({ data }: Props) {
 }
 
 export default DashboardInfo;
+
+

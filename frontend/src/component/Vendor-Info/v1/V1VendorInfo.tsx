@@ -2,14 +2,14 @@
 
 import VendorSidebar from "./VendorSidebar";
 import VendorInstitutions from "../VendorInstitutions";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type VendorInfoProps = {
     vendor: any;
 };
 
 const V1VendorInfo = ({ vendor }: VendorInfoProps) => {
-    const Colors = useColors();
+    const Colors = getColors();
     return (
         <div className={`min-h-screen ${Colors.background.primary} p-6`}>
             <div className="flex gap-6 max-w-screen mx-auto">
@@ -24,4 +24,6 @@ const V1VendorInfo = ({ vendor }: VendorInfoProps) => {
 };
 
 export default V1VendorInfo;
+
+
 

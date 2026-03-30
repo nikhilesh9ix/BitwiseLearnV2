@@ -1,7 +1,7 @@
 import { createTopic } from "@/api/problems/create-topic";
 import { updateDescription } from "@/api/problems/update-problem";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import MarkdownEditor from "@/component/ui/MarkDownEditor";
 import { X } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -15,7 +15,7 @@ type SubmissionsProps = {
 function Submissions({ content }: SubmissionsProps) {
   if (!content) return null;
   const param = useParams();
-  const Colors = useColors();
+  const Colors = getColors();
   /* ---------------- STATE ---------------- */
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -299,3 +299,5 @@ function Submissions({ content }: SubmissionsProps) {
 }
 
 export default Submissions;
+
+

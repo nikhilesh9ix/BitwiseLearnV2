@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type Props = {
   openForm: (value: boolean) => void;
@@ -37,7 +37,7 @@ export default function InstitutionForm({ openForm, onSubmit }: Props) {
     websiteLink: "",
   });
   const [errors, setErrors] = useState<Partial<Record<keyof InstitutionFormData, string>>>({});
-  const Colors = useColors();
+  const Colors = getColors();
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -315,7 +315,7 @@ export default function InstitutionForm({ openForm, onSubmit }: Props) {
 /* ---------- UI Primitives ---------- */
 
 function Label({ children }: { children: React.ReactNode }) {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <label className={`text-[11px] uppercase tracking-wide ${Colors.text.special}`}>
       {children}
@@ -331,7 +331,7 @@ function Input({
   label: string;
   error?: string;
 }) {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div>
       <Label>{label}</Label>
@@ -345,3 +345,5 @@ function Input({
     </div>
   );
 }
+
+

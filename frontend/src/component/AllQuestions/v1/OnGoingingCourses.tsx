@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useStudent } from "@/store/studentStore";
 import { useTeacher } from "@/store/teacherStore";
 
 function OngoingCourses() {
   const { info } = useStudent();
   const { info: teacherInfo } = useTeacher();
-  const Colors = useColors();
+  const Colors = getColors();
 
   const student = info?.data;
   const teacher = teacherInfo?.data;
@@ -106,3 +106,5 @@ function OngoingCourses() {
 }
 
 export default OngoingCourses;
+
+

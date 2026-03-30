@@ -12,7 +12,7 @@ import {
   User,
 } from "lucide-react";
 import { useStudent } from "@/store/studentStore";
-import { useColors } from "./(Color Manager)/useColors";
+import { getColors } from "./(Color Manager)/useColors";
 import ThemeSwitcher from "./(Color Manager)/ThemeSwitcher";
 import { logoutUser } from "@/lib/logout";
 import { useRouter } from "next/navigation";
@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 
 const MIN_WIDTH = 60;
 const MAX_WIDTH = 420;
-const Colors = useColors();
+const Colors = getColors();
 
 export default function StudentSideBar() {
   const [width, setWidth] = useState(220);
@@ -213,3 +213,5 @@ function NavLink({
     </Link>
   );
 }
+
+

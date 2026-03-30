@@ -5,7 +5,7 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import TestCaseSection from "@/component/Problem/v1/TestcaseSection";
 import MarkdownEditor, { THEME_MAP } from "@/component/ui/MarkDownEditor";
 import { changeStatus, deleteStatus } from "@/api/problems/change-status";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
 import useLogs from "@/lib/useLogs";
 import { useInstitution } from "@/store/institutionStore";
@@ -36,7 +36,7 @@ function ProblemDescrption({
   const [width, setWidth] = useState(420); // initial width in px
   const [showButton, setShowButton] = useState(false);
   const isResizing = useRef(false);
-  const Colors = useColors();
+  const Colors = getColors();
   const { info } = useInstitution();
   const { info: vendorinfo } = useVendor();
 
@@ -218,7 +218,7 @@ export default ProblemDescrption;
 
 function HintItem({ hint, index }: { hint: string; index: number }) {
   const [open, setOpen] = useState(false);
-  const Colors = useColors();
+  const Colors = getColors();
 
   return (
     <div
@@ -243,3 +243,5 @@ function HintItem({ hint, index }: { hint: string; index: number }) {
     </div>
   );
 }
+
+

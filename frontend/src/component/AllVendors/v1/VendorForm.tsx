@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type Props = {
   openForm: (value: boolean) => void;
@@ -22,7 +22,7 @@ type VendorFormData = {
 const TOTAL_STEPS = 2;
 
 export default function VendorForm({ openForm, onSubmit }: Props) {
-  const Colors = useColors();
+  const Colors = getColors();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<VendorFormData>({
     name: "",
@@ -189,7 +189,7 @@ function Label({
   Colors,
 }: {
   children: React.ReactNode;
-  Colors: ReturnType<typeof useColors>;
+  Colors: ReturnType<typeof getColors>;
 }) {
   return (
     <label className={`text-[11px] uppercase tracking-wide ${Colors.text.special}`}>
@@ -204,7 +204,7 @@ function Input({
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement> & {
   label: string;
-  Colors: ReturnType<typeof useColors>;
+  Colors: ReturnType<typeof getColors>;
 }) {
   return (
     <div>
@@ -216,3 +216,5 @@ function Input({
     </div>
   );
 }
+
+

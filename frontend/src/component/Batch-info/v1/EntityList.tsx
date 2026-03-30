@@ -8,7 +8,7 @@ import { getCourseEnrollments } from "@/api/courses/course/enrollments/get-all-e
 import { allBatchCourses } from "@/api/courses/course/enrollments/get-all-batch-courses";
 import { getAssessmentsByBatch } from "@/api/assessments/get-assessments-by-batch";
 // import { getAllAssessments } from "@/api/vendors/get-all-vendors";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { deleteEntity, updateEntity } from "@/api/institutions/entity";
 
 type EntityListProps = {
@@ -34,7 +34,7 @@ export const EntityList = ({ type, batchId }: EntityListProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedEntity, setEditedEntity] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const Colors = useColors();
+  const Colors = getColors();
 
   const handleEdit = () => {
     setEditedEntity({ ...selectedEntity }); // clone data
@@ -523,3 +523,5 @@ export const EntityList = ({ type, batchId }: EntityListProps) => {
     </>
   );
 };
+
+

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Clock, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 export type Course = {
   id: string;
@@ -26,7 +26,7 @@ const CourseCard = ({ course }: CourseCardProps) => {
   const level = course.level?.toUpperCase();
 
   const isDraft = course.isPublished !== "PUBLISHED";
-  const Colors = useColors();
+  const Colors = getColors();
 
   const levelStyles =
     level === "BASIC"
@@ -128,3 +128,5 @@ const CourseCard = ({ course }: CourseCardProps) => {
 };
 
 export default CourseCard;
+
+

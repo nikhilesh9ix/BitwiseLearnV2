@@ -1,7 +1,7 @@
 import { getAllProblemSubmission } from "@/api/problems/get-all-submission";
 import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, Code2, Clock, MemoryStick } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 interface Submission {
   id: string;
@@ -17,7 +17,7 @@ interface SubmissionProps {
 }
 
 function Submission({ id }: SubmissionProps) {
-  const Colors = useColors();
+  const Colors = getColors();
 
   const [content, setContent] = useState<Submission[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
@@ -282,3 +282,5 @@ function Submission({ id }: SubmissionProps) {
 }
 
 export default Submission;
+
+

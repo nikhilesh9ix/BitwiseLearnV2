@@ -9,7 +9,7 @@ import AssessmentsForm from "./AssessmentsForm";
 import toast from "react-hot-toast";
 import { uploadBatches } from "@/api/batches/create-batches";
 import useLogs from "@/lib/useLogs";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import axiosInstance from "@/lib/axios";
 
 type TabsProps = {
@@ -21,7 +21,7 @@ type TabsProps = {
   onStudentCreated?: () => void;
 };
 
-const Colors = useColors();
+const Colors = getColors();
 
 const RenderComponent = ({
   value,
@@ -243,3 +243,5 @@ export const Tabs = ({
 };
 
 export default Tabs;
+
+

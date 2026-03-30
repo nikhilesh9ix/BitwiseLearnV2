@@ -16,12 +16,12 @@ import { createSection } from "@/api/courses/section/create-section";
 import { getSections } from "@/api/courses/section/get-section";
 import AddAssignment from "../../add-assignment/AddAssignment";
 import { updateCourse } from "@/api/courses/course/update-course";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type Props = {
   courseId: string;
 };
-const Colors = useColors();
+const Colors = getColors();
 
 /* ---------------- Delete Confirmation Modal ---------------- */
 
@@ -886,3 +886,5 @@ const CourseBuilderV1 = ({ courseId }: Props) => {
 };
 
 export default CourseBuilderV1;
+
+

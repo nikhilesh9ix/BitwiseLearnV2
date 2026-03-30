@@ -1,9 +1,9 @@
 import React from 'react'
 import StudentAssessment from '@/component/student-assessment/StudentAssessment'
 import StudentSideBar from '@/component/general/StudentSidebar'
-import { useColors } from '@/component/general/(Color Manager)/useColors';
+import { getColors } from '@/component/general/(Color Manager)/useColors';
 const page = () => {
-  const Colors = useColors();
+  const Colors = getColors();
   return (
     <div className="flex h-screen overflow-hidden ">
       <StudentSideBar />
@@ -15,3 +15,4 @@ const page = () => {
 }
 
 export default page
+

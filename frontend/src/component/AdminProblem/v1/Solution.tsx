@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import AddSolution from "./AddSolution";
 import { updateSolution } from "@/api/problems/update-solution";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import toast from "react-hot-toast";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
 type SolutionType = {
@@ -17,7 +17,7 @@ type SolutionType = {
 };
 
 function Solution() {
-  const Colors = useColors();
+  const Colors = getColors();
   const { theme } = useTheme();
   const params = useParams();
   const problemId = params.id as string;
@@ -122,3 +122,5 @@ function Solution() {
 }
 
 export default Solution;
+
+

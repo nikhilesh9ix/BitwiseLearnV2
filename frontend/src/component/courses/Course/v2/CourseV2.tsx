@@ -17,7 +17,7 @@ import View from "react-adobe-embed";
 // import PdfViewer from "./PDFViewer";
 import { markAsDone, markAsUnDone } from "@/api/courses/course/course-progress";
 import MarkdownEditor from "@/component/ui/MarkDownEditor";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
 import AssignmentV2 from "@/component/assignment/v2/AssignmentV2";
 import Assignment from "@/component/assignment/Assignment";
@@ -55,7 +55,7 @@ type Section = {
   courseAssignemnts: Assignment[];
 };
 
-const Colors = useColors();
+const Colors = getColors();
 
 /* ================= COMPONENT ================= */
 
@@ -711,3 +711,5 @@ function SectionNav({
     </div>
   );
 }
+
+

@@ -1,11 +1,13 @@
 import axiosInstance from "@/lib/axios";
-import toast from "react-hot-toast";
+import { resolveApiData, type StateSetter } from "@/lib/api";
 
-export const getAllAdmins = async (stateFn: any) => {
-  try {
-    const data = await axiosInstance.get("/api/v1/admins/get-all-admin");
-    stateFn(data.data.data);
-  } catch (error) {
-    toast.error("error fetching admins");
-  }
-};
+export type AdminListItem = Record<string, unknown>;
+
+export const getAllAdmins = async (
+  stateFn?: StateSetter<AdminListItem[]>,
+): Promise<AdminListItem[]> =>
+  resolveApiData(axiosInstance.get("/api/v1/admins/get-all-admin"), {
+    fallbackMessage: "Error fetching admins",
+    fallbackValue: [],
+    stateSetter: stateFn,
+  });

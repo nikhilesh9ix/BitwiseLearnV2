@@ -3,12 +3,12 @@ import { Tabs, TabsContent, TabsList } from "@/component/ui/tabs";
 import { TabsTrigger } from "@radix-ui/react-tabs";
 import AllAssessments from "./AllAssessments";
 import AllCourses from "./AllCourses";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import useLogs from "@/lib/useLogs";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
 function ReportHero() {
-  const Colors = useColors();
+  const Colors = getColors();
   const rbac = useLogs();
   const router = useRouter();
   const query = useSearchParams();
@@ -93,3 +93,5 @@ function ReportHero() {
 }
 
 export default ReportHero;
+
+

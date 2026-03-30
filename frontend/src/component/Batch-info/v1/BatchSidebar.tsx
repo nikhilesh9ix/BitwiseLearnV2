@@ -8,12 +8,12 @@ import { useRouter } from "next/navigation";
 import { uploadBatches } from "@/api/batches/create-batches";
 import toast from "react-hot-toast";
 import useLogs from "@/lib/useLogs";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type BatchSidebarProps = {
   batch: any;
 };
-const Colors = useColors();
+const Colors = getColors();
 
 const formatDate = (dateString: string | Date): string => {
   const date = new Date(dateString);
@@ -272,3 +272,5 @@ const BatchSidebar = ({ batch }: BatchSidebarProps) => {
 };
 
 export default BatchSidebar;
+
+

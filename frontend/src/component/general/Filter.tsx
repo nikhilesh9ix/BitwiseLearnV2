@@ -1,7 +1,7 @@
 "use client";
 import { Search } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
-import { useColors } from "./(Color Manager)/useColors";
+import { getColors } from "./(Color Manager)/useColors";
 
 export type Item = {
   id: number;
@@ -17,7 +17,7 @@ function Filter({
   setFilteredData: any;
 }) {
   const [search, setSearch] = useState("");
-  const Colors = useColors();
+  const Colors = getColors();
 
   const filteredData = useMemo(() => {
     if (!data) return [];
@@ -49,3 +49,5 @@ function Filter({
 }
 
 export default Filter;
+
+

@@ -15,8 +15,8 @@ export default function useLogs() {
         if (!response.ok) throw new Error("Failed to fetch role");
         const json = await response.json();
         setRole(json.data);
-      } catch (err: any) {
-        setError(err?.message || "Failed to fetch role");
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "Failed to fetch role");
       } finally {
         setLoading(false);
       }

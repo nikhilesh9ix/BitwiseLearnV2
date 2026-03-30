@@ -7,7 +7,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Filter, CheckCircle, XCircle } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import useVendor from "@/store/vendorStore";
 import { useAdmin } from "@/store/adminStore";
 import { useInstitution } from "@/store/institutionStore";
@@ -33,7 +33,7 @@ function AllCourses() {
   const [status, setStatus] = useState("all");
 
   const router = useRouter();
-  const Colors = useColors();
+  const Colors = getColors();
 
   const { info: adminInfo } = useAdmin();
   const { info: instituteInfo } = useInstitution();
@@ -243,3 +243,5 @@ function AllCourses() {
 }
 
 export default AllCourses;
+
+

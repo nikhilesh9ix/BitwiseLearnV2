@@ -5,7 +5,7 @@ import { useState } from "react";
 import { createCourse } from "@/api/courses/course/create-course";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 
 type CourseFormData = {
   name: string;
@@ -23,7 +23,7 @@ type CourseFormProps = {
 const CourseForm: React.FC<CourseFormProps> = ({ onClose, onSuccess }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const Colors = useColors();
+  const Colors = getColors();
 
   // ADDED
   const [formError, setFormError] = useState<string | null>(null);
@@ -186,3 +186,5 @@ const CourseForm: React.FC<CourseFormProps> = ({ onClose, onSuccess }) => {
 };
 
 export default CourseForm;
+
+

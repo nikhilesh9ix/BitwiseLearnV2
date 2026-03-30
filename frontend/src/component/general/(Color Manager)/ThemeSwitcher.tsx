@@ -2,12 +2,12 @@
 
 import { useTheme } from "@/component/general/(Color Manager)/ThemeController";
 import { Sun, Moon } from 'lucide-react'
-import { useColors } from "./useColors";
+import { getColors } from "./useColors";
 
 export default function ThemeSwitcher() {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "Dark";
-  const Colors = useColors();
+  const Colors = getColors();
 
   return (
     <button
@@ -41,3 +41,5 @@ export default function ThemeSwitcher() {
     </button>
   );
 }
+
+

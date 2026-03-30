@@ -1,7 +1,6 @@
 "use client";
 
-import { getStudentData } from "@/api/reports/get-student-data";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   BarChart,
@@ -16,27 +15,58 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
+import type { TooltipProps } from "recharts";
 import {
   ArrowLeft,
   Users,
-  TrendingUp,
   FileCheck2,
   BarChart3,
   ClipboardList,
 } from "lucide-react";
-import { useColors } from "@/component/general/(Color Manager)/useColors";
 
-type Student = {
-  id: string;
-  name: string;
-  rollNumber: string;
-  courseProgresses: any[];
-  courseAssignemntSubmissions: any[];
-};
+import {
+  getColors,
+  type Colors,
+} from "@/component/general/(Color Manager)/useColors";
+import {
+  getStudentData,
+  type CourseReportStudent,
+} from "@/api/reports/get-student-data";
 
-const COLORS = ["#10b981", "#ef4444"];
-const PAGE_SIZE = 100; // Number of students per page
-const Colors = useColors();
+const Colors = getColors();
+const CHART_COLORS = ["#10b981", "#ef4444"];
+const PAGE_SIZE = 100;
+
+type TooltipPayload = TooltipProps<number, string>["payload"];
+
+function ProgressTooltip({
+  active,
+  payload,
+  colors,
+}: {
+  active?: boolean;
+  payload?: TooltipPayload;
+  colors: Colors;
+}) {
+  const item = payload?.[0];
+  const studentName =
+    item && typeof item.payload === "object" && item.payload && "name" in item.payload
+      ? String(item.payload.name)
+      : "";
+
+  if (!active || !item) {
+    return null;
+  }
+
+  return (
+    <div
+      className={`rounded-md ${colors.background.secondary} ${colors.border.defaultThin} px-3 py-2 text-sm`}
+    >
+      <p className={`font-medium ${colors.text.primary}`}>{studentName}</p>
+      <p className="text-emerald-400">Progress: {String(item.value ?? 0)}</p>
+    </div>
+  );
+}
 
 function IndividualCourseReportV1({
   courseId,
@@ -45,29 +75,32 @@ function IndividualCourseReportV1({
   courseId: string;
   batchId: string;
 }) {
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<CourseReportStudent[]>([]);
   const [pageNumber, setPageNumber] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    async function loadData() {
+    const loadData = async () => {
       await getStudentData(0, courseId, batchId, setStudents);
-    }
-    loadData();
+    };
+
+    void loadData();
   }, [courseId, batchId]);
 
-  /* ------------------ Filters ------------------ */
   const filteredStudents = useMemo(() => {
-    if (!searchTerm.trim()) return students;
+    if (!searchTerm.trim()) {
+      return students;
+    }
+
+    const query = searchTerm.toLowerCase();
     return students.filter(
-      (s) =>
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.rollNumber.toLowerCase().includes(searchTerm.toLowerCase()),
+      (student) =>
+        student.name.toLowerCase().includes(query) ||
+        student.rollNumber.toLowerCase().includes(query),
     );
   }, [students, searchTerm]);
 
-  /* ------------------ Pagination ------------------ */
   const totalPages = Math.ceil(filteredStudents.length / PAGE_SIZE);
   const paginatedStudents = useMemo(() => {
     const start = pageNumber * PAGE_SIZE;
@@ -76,24 +109,17 @@ function IndividualCourseReportV1({
 
   const totalStudents = students.length;
   const submittedCount = students.filter(
-    (s) => s.courseAssignemntSubmissions.length > 0,
+    (student) => student.courseAssignemntSubmissions.length > 0,
   ).length;
   const notSubmittedCount = totalStudents - submittedCount;
   const submissionRate =
     totalStudents > 0
       ? ((submittedCount / totalStudents) * 100).toFixed(1)
       : "0";
-  const avgProgress =
-    totalStudents > 0
-      ? (
-          students.reduce((sum, s) => sum + s.courseProgresses.length, 0) /
-          totalStudents
-        ).toFixed(1)
-      : 0;
 
-  const progressChartData = students.map((s) => ({
-    name: s.name.split(" ")[0],
-    progress: s.courseProgresses.length,
+  const progressChartData = students.map((student) => ({
+    name: student.name.split(" ")[0],
+    progress: student.courseProgresses.length,
   }));
 
   const assignmentStats = [
@@ -101,28 +127,11 @@ function IndividualCourseReportV1({
     { name: "Pending", value: notSubmittedCount },
   ];
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload?.length) {
-      return (
-        <div
-          className={`rounded-md ${Colors.background.secondary} ${Colors.border.defaultThin} px-3 py-2 text-sm`}
-        >
-          <p className={`font-medium ${Colors.text.primary}`}>
-            {payload[0].payload.name}
-          </p>
-          <p className="text-emerald-400">Progress: {payload[0].value}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div
       className={`min-h-screen ${Colors.background.primary} ${Colors.text.primary} p-6`}
     >
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Back + Header */}
         <div className="flex items-center gap-4">
           <button
             onClick={() =>
@@ -140,7 +149,6 @@ function IndividualCourseReportV1({
           <h1 className="text-2xl font-semibold">Individual Course Report</h1>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <StatCard
             title="Total Students"
@@ -154,9 +162,7 @@ function IndividualCourseReportV1({
           />
         </div>
 
-        {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Bar Chart */}
           <Card
             title="Student Progress"
             subtitle="Completed modules per student"
@@ -167,7 +173,7 @@ function IndividualCourseReportV1({
                 <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />
                 <XAxis dataKey="name" stroke="#a1a1aa" />
                 <YAxis stroke="#a1a1aa" />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<ProgressTooltip colors={Colors} />} />
                 <Bar
                   dataKey="progress"
                   fill="#10b981"
@@ -178,7 +184,6 @@ function IndividualCourseReportV1({
             </ResponsiveContainer>
           </Card>
 
-          {/* Pie Chart */}
           <Card
             title="Assignment Status"
             subtitle="Submission overview"
@@ -194,8 +199,8 @@ function IndividualCourseReportV1({
                   outerRadius={100}
                   paddingAngle={4}
                 >
-                  {assignmentStats.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i]} />
+                  {assignmentStats.map((_, index) => (
+                    <Cell key={index} fill={CHART_COLORS[index]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -205,7 +210,6 @@ function IndividualCourseReportV1({
           </Card>
         </div>
 
-        {/* Search + Table */}
         <div
           className={`rounded-lg ${Colors.border.defaultThin} ${Colors.background.secondary} overflow-hidden`}
         >
@@ -219,15 +223,14 @@ function IndividualCourseReportV1({
               </h2>
             </div>
 
-            {/* Search input */}
             <input
               type="text"
               placeholder="Search by name or roll number"
               className={`rounded ${Colors.background.primary} text-sm p-2 ${Colors.text.primary} placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-300`}
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setPageNumber(0); // Reset page when searching
+              onChange={(event) => {
+                setSearchTerm(event.target.value);
+                setPageNumber(0);
               }}
             />
           </div>
@@ -245,21 +248,21 @@ function IndividualCourseReportV1({
               </tr>
             </thead>
             <tbody>
-              {paginatedStudents.map((s) => (
+              {paginatedStudents.map((student) => (
                 <tr
-                  key={s.id}
+                  key={student.id}
                   className={`border-t border-zinc-800 ${Colors.hover.special}`}
                 >
-                  <td className="p-4">{s.name}</td>
-                  <td className="p-4 text-zinc-400">{s.rollNumber}</td>
+                  <td className="p-4">{student.name}</td>
+                  <td className="p-4 text-zinc-400">{student.rollNumber}</td>
                   <td className="p-4 text-emerald-400">
-                    {s.courseProgresses.length}
+                    {student.courseProgresses.length}
                   </td>
                   <td className="p-4">
-                    {s.courseAssignemntSubmissions.length}
+                    {student.courseAssignemntSubmissions.length}
                   </td>
                   <td className="p-4">
-                    {s.courseAssignemntSubmissions.length > 0 ? (
+                    {student.courseAssignemntSubmissions.length > 0 ? (
                       <span className="text-emerald-400">Submitted</span>
                     ) : (
                       <span className="text-red-400">Pending</span>
@@ -277,11 +280,10 @@ function IndividualCourseReportV1({
             </tbody>
           </table>
 
-          {/* Pagination controls */}
           <div className="flex justify-between items-center p-4 border-t border-zinc-800">
             <button
               disabled={pageNumber === 0}
-              onClick={() => setPageNumber((p) => Math.max(0, p - 1))}
+              onClick={() => setPageNumber((page) => Math.max(0, page - 1))}
               className={`px-4 py-2 rounded ${Colors.background.special} ${Colors.text.primary} cursor-pointer disabled:opacity-40`}
             >
               Prev
@@ -292,7 +294,7 @@ function IndividualCourseReportV1({
             <button
               disabled={pageNumber + 1 >= totalPages}
               onClick={() =>
-                setPageNumber((p) => Math.min(p + 1, totalPages - 1))
+                setPageNumber((page) => Math.min(page + 1, totalPages - 1))
               }
               className={`px-4 py-2 rounded ${Colors.background.special} ${Colors.text.primary} cursor-pointer disabled:opacity-40`}
             >
@@ -305,14 +307,13 @@ function IndividualCourseReportV1({
   );
 }
 
-/* ------------------ Reusable Components ------------------ */
 function StatCard({
   title,
   value,
   icon,
 }: {
   title: string;
-  value: any;
+  value: string | number;
   icon: React.ReactNode;
 }) {
   return (
@@ -356,3 +357,5 @@ function Card({
 }
 
 export default IndividualCourseReportV1;
+
+

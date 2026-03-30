@@ -1,18 +1,19 @@
 import axiosInstance from "@/lib/axios";
-import toast from "react-hot-toast";
+import { resolveApiData, type StateSetter } from "@/lib/api";
 
-export const getAllBatches = async (stateFn: any, paramId?: string) => {
-  try {
-    const endpoint = paramId
-      ? "/api/v1/batches/get-all-batch/" + paramId
-      : "/api/v1/batches/get-all-batch";
-    const response = await axiosInstance.get(endpoint);
-    const batches = response.data?.data || [];
-    stateFn(batches);
-    return batches;
-  } catch (error) {
-    toast.error("failed to get batches");
-    stateFn([]);
-    return [];
-  }
+export type BatchListItem = Record<string, unknown>;
+
+export const getAllBatches = async (
+  stateFn?: StateSetter<BatchListItem[]>,
+  paramId?: string,
+): Promise<BatchListItem[]> => {
+  const endpoint = paramId
+    ? `/api/v1/batches/get-all-batch/${paramId}`
+    : "/api/v1/batches/get-all-batch";
+
+  return resolveApiData(axiosInstance.get(endpoint), {
+    fallbackMessage: "Failed to get batches",
+    fallbackValue: [],
+    stateSetter: stateFn,
+  });
 };

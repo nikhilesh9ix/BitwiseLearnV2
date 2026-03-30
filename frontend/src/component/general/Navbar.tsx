@@ -1,6 +1,6 @@
 "use client";
 
-import { useColors } from "@/component/general/(Color Manager)/useColors";
+import { getColors } from "@/component/general/(Color Manager)/useColors";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -13,7 +13,7 @@ const navLinks = [
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const Colors = useColors();
+  const Colors = getColors();
 
   return (
     <header className="sticky top-0 z-50 px-4 pt-5 pb-2 sm:px-6">
@@ -86,3 +86,5 @@ export function Navbar() {
     </header>
   );
 }
+
+
