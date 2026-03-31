@@ -366,11 +366,28 @@ async def submit_assessment_question(id: str, body: SubmitAssessmentQuestionRequ
                         ProblemTemplate.problem_id == problem.id,
                         ProblemTemplate.language == body.language,
                     )
+                    if not template:
+                        normalized_language = (body.language or "").strip().upper()
+                        language_aliases = {
+                            "JS": "JAVASCRIPT",
+                            "NODE": "JAVASCRIPT",
+                            "C++": "CPP",
+                            "CXX": "CPP",
+                        }
+                        normalized_language = language_aliases.get(normalized_language, normalized_language)
+                        if normalized_language != body.language:
+                            template = await ProblemTemplate.find_one(
+                                ProblemTemplate.problem_id == problem.id,
+                                ProblemTemplate.language == normalized_language,
+                            )
                     test_cases = await ProblemTestCase.find(ProblemTestCase.problem_id == problem.id).to_list()
 
                     full_code = body.code
                     if template:
-                        full_code = body.code + "\n" + template.function_body
+                        if "_solution_" in template.function_body:
+                            full_code = template.function_body.replace("_solution_", body.code)
+                        else:
+                            full_code = body.code + "\n" + template.function_body
 
                     all_passed = True
                     for tc in test_cases:

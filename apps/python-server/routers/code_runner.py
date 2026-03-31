@@ -14,32 +14,69 @@ from enums import TestcaseType, ProblemStatus, UserType
 router = APIRouter(prefix="/api/v1/code", tags=["Code Runner"])
 
 
+def _normalize_language(language: str) -> str:
+    aliases = {
+        "JS": "JAVASCRIPT",
+        "NODE": "JAVASCRIPT",
+        "C++": "CPP",
+        "CXX": "CPP",
+    }
+    normalized = (language or "").strip().upper()
+    return aliases.get(normalized, normalized)
+
+
+async def _find_problem_template(problem_id: PydanticObjectId, language: str):
+    template = await ProblemTemplate.find_one(
+        ProblemTemplate.problem_id == problem_id,
+        ProblemTemplate.language == language,
+    )
+    if template:
+        return template
+
+    normalized_language = _normalize_language(language)
+    if normalized_language == language:
+        return None
+
+    return await ProblemTemplate.find_one(
+        ProblemTemplate.problem_id == problem_id,
+        ProblemTemplate.language == normalized_language,
+    )
+
+
+def _compose_full_code(user_code: str, template: ProblemTemplate | None) -> str:
+    if not template or not template.function_body:
+        return user_code
+
+    if "_solution_" in template.function_body:
+        return template.function_body.replace("_solution_", user_code)
+
+    return user_code + "\n" + template.function_body
+
+
 @router.post("/run")
 async def run_code(body: RunCodeRequest, current_user: dict = Depends(get_current_user)):
     problem = await Problem.get(PydanticObjectId(body.problem_id))
     if not problem:
         return api_response(404, "Problem not found", error="Not found")
+    problem_id = problem.id
+    if not problem_id:
+        return api_response(404, "Problem not found", error="Not found")
 
-    template = await ProblemTemplate.find_one(
-        ProblemTemplate.problem_id == problem.id,
-        ProblemTemplate.language == body.language,
-    )
+    template = await _find_problem_template(problem_id, body.language)
 
     # Admins run against all test cases, others only example
     if current_user["type"] in (UserType.SUPERADMIN, UserType.ADMIN):
-        test_cases = await ProblemTestCase.find(ProblemTestCase.problem_id == problem.id).to_list()
+        test_cases = await ProblemTestCase.find(ProblemTestCase.problem_id == problem_id).to_list()
     else:
         test_cases = await ProblemTestCase.find(
-            ProblemTestCase.problem_id == problem.id,
+            ProblemTestCase.problem_id == problem_id,
             ProblemTestCase.test_type == TestcaseType.EXAMPLE,
         ).to_list()
 
     if not test_cases:
         return api_response(400, "No test cases found", error="No test cases")
 
-    full_code = body.code
-    if template:
-        full_code = body.code + "\n" + template.function_body
+    full_code = _compose_full_code(body.code, template)
 
     results = []
     for tc in test_cases:
@@ -87,13 +124,6 @@ async def compile_code(body: CompileCodeRequest):
             )
             return api_response(400, "Compile failed", error=compile_error)
 
-        return api_response(200, "Code compiled", data={
-            "stdout": compile_output.get("stdout", ""),
-            "stderr": compile_output.get("stderr", ""),
-            "code": compile_code_value,
-            "signal": compile_output.get("signal"),
-        })
-
     run_output = result.get("run", {})
     return api_response(200, "Code compiled", data={
         "stdout": run_output.get("stdout", ""),
@@ -108,19 +138,17 @@ async def submit_code(body: SubmitCodeRequest, current_user: dict = Depends(requ
     problem = await Problem.get(PydanticObjectId(body.problem_id))
     if not problem:
         return api_response(404, "Problem not found", error="Not found")
+    problem_id = problem.id
+    if not problem_id:
+        return api_response(404, "Problem not found", error="Not found")
 
-    template = await ProblemTemplate.find_one(
-        ProblemTemplate.problem_id == problem.id,
-        ProblemTemplate.language == body.language,
-    )
+    template = await _find_problem_template(problem_id, body.language)
 
-    test_cases = await ProblemTestCase.find(ProblemTestCase.problem_id == problem.id).to_list()
+    test_cases = await ProblemTestCase.find(ProblemTestCase.problem_id == problem_id).to_list()
     if not test_cases:
         return api_response(400, "No test cases", error="No test cases")
 
-    full_code = body.code
-    if template:
-        full_code = body.code + "\n" + template.function_body
+    full_code = _compose_full_code(body.code, template)
 
     all_passed = True
     failed_tc = None
@@ -150,7 +178,7 @@ async def submit_code(body: SubmitCodeRequest, current_user: dict = Depends(requ
         code=body.code,
         status=status,
         student_id=PydanticObjectId(current_user["id"]),
-        problem_id=problem.id,
+        problem_id=problem_id,
         failed_test_case=failed_tc,
     )
     await submission.insert()

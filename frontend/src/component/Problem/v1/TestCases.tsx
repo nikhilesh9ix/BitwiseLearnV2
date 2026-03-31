@@ -13,8 +13,13 @@ type TestCase = {
 type OutputCase = {
   input?: string;
   isCorrect?: boolean;
+  passed?: boolean;
   output?: string;
   expectedOutput?: string;
+  expected_output?: string;
+  actualOutput?: string;
+  actual_output?: string;
+  stderr?: string;
   compileOutput?: string;
 };
 
@@ -193,6 +198,10 @@ function TestCases({
                   (() => {
                     const o = output[activeCase];
                     const parsedInput = o.input;
+                    const isPassed = o.isCorrect ?? o.passed ?? false;
+                    const expectedOutput = o.expectedOutput ?? o.expected_output ?? "-";
+                    const actualOutput =
+                      o.actualOutput ?? o.actual_output ?? o.output ?? o.stderr ?? "-";
 
                     if (o.compileOutput) {
                       return (
@@ -231,7 +240,7 @@ function TestCases({
     rounded-xl p-4 space-y-4 border
     transition-all duration-300
     ${
-      o.isCorrect
+      isPassed
         ? "bg-green-500/5 border-green-500/40 shadow-[0_0_20px_rgba(34,197,94,0.15)]"
         : "bg-red-500/5 border-red-500/40 shadow-[0_0_20px_rgba(239,68,68,0.15)]"
     }
@@ -245,13 +254,13 @@ function TestCases({
                             className={`
     text-xs font-semibold px-2 py-1 rounded-full
     ${
-      o.isCorrect
+      isPassed
         ? "bg-green-500/20 text-green-400"
         : "bg-red-500/20 text-red-400"
     }
   `}
                           >
-                            {o.isCorrect ? "Passed" : "Failed"}
+                            {isPassed ? "Passed" : "Failed"}
                           </span>
                         </div>
 
@@ -289,7 +298,7 @@ function TestCases({
                             ${Colors.text.primary}
                           `}
                           >
-                            {o.expectedOutput}
+                            {expectedOutput}
                           </pre>
                         </div>
 
@@ -305,10 +314,10 @@ function TestCases({
                             rounded-md p-2 font-mono text-sm
                             ${Colors.background.secondary}
                             ${Colors.border.fadedThin}
-${o.isCorrect ? "text-green-400" : "text-red-400"}
+${isPassed ? "text-green-400" : "text-red-400"}
                           `}
                           >
-                            {o.actualOutput || o.stderr || "—"}
+                            {actualOutput}
                           </pre>
                         </div>
                       </div>

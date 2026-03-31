@@ -45,8 +45,8 @@ async def execute_code(language: str, code: str, stdin: str = "") -> dict:
         "files": [{"name": f"main.{ext}", "content": code}],
         "stdin": stdin,
         "args": [],
-        "compile_timeout": 10000,
-        "run_timeout": 10000,
+        "compile_timeout": 3000,
+        "run_timeout": 3000,
         "compile_memory_limit": -1,
         "run_memory_limit": -1,
     }

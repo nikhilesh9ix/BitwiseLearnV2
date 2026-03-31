@@ -17,7 +17,61 @@ const languageOptions = [
   { label: "C", value: "c" },
 ];
 
-const normalizeLanguage = (lang: string) => lang.toLowerCase();
+const STARTER_CODE: Record<string, string> = {
+  javascript: 'console.log("Hello, World!");',
+  typescript: 'console.log("Hello, World!");',
+  python: 'print("Hello, World!")',
+  java:
+    "public class Main {\n  public static void main(String[] args) {\n    System.out.println(\"Hello, World!\");\n  }\n}",
+  cpp:
+    "#include <iostream>\nusing namespace std;\n\nint main() {\n  cout << \"Hello, World!\" << endl;\n  return 0;\n}",
+  c: "#include <stdio.h>\n\nint main() {\n  printf(\"Hello, World!\\n\");\n  return 0;\n}",
+};
+
+const normalizeLanguage = (lang: string) => {
+  const normalized = (lang || "").toLowerCase().trim();
+  if (normalized === "c++" || normalized === "cxx") {
+    return "cpp";
+  }
+  return normalized;
+};
+
+const toReadableOutput = (value: unknown): string => {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => toReadableOutput(entry))
+      .filter((entry) => entry.trim().length > 0)
+      .join("\n");
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const preferred =
+      record.message ?? record.detail ?? record.error ?? record.msg;
+    if (preferred) {
+      return toReadableOutput(preferred);
+    }
+
+    try {
+      return JSON.stringify(record, null, 2);
+    } catch {
+      return "Execution failed";
+    }
+  }
+
+  if (value == null) {
+    return "";
+  }
+
+  return String(value);
+};
+
+const hasLanguageOption = (value: string) =>
+  languageOptions.some((option) => option.value === value);
 
 export default function CodeEditor({
   template,
@@ -27,29 +81,36 @@ export default function CodeEditor({
   setTab,
   showSubmit = true,
 }: {
-  template: any[];
+  template?: any[];
   questionId: string;
   output: any;
   customSubmit?: (language: string, code: string) => void;
   setTab: any;
-  showSubmit: boolean;
+  showSubmit?: boolean;
 }) {
   const Colors = getColors();
   const theme = useTheme();
-  console.log(template);
+
   const templatesByLanguage = useMemo(() => {
     const map: Record<string, any> = {};
     template?.forEach((t) => {
-      map[normalizeLanguage(t.language)] = t;
+      const normalized = normalizeLanguage(t?.language);
+      if (normalized && hasLanguageOption(normalized)) {
+        map[normalized] = t;
+      }
     });
     return map;
   }, [template]);
 
-  const defaultLang = template?.length
-    ? normalizeLanguage(template[0].language)
+  const firstTemplateLanguage = normalizeLanguage(template?.[0]?.language || "");
+  const defaultLang = hasLanguageOption(firstTemplateLanguage)
+    ? firstTemplateLanguage
     : "python";
 
-  const defaultCode = template?.length ? template[0].defaultCode : "";
+  const defaultCode =
+    template?.[0]?.defaultCode ||
+    template?.[0]?.functionBody ||
+    STARTER_CODE[defaultLang];
 
   const [language, setLanguage] = useState(defaultLang);
   const [code, setCode] = useState(defaultCode);
@@ -96,13 +157,23 @@ export default function CodeEditor({
       const res = await runCode({
         language,
         code,
-        questionId,
+        problemId: questionId,
       });
 
-      const testCases = Array.isArray(res?.testCases) ? res.testCases : [];
+      const payload = res?.data ?? res ?? {};
+      const testCases = Array.isArray(payload?.results)
+        ? payload.results
+        : Array.isArray(payload?.testCases)
+          ? payload.testCases
+          : [];
 
       const compileMessage =
-        res?.compileOutput || res?.stderr || res?.error || res?.message;
+        payload?.compileOutput ||
+        payload?.stderr ||
+        payload?.error ||
+        (payload?.message && payload.message !== "Code executed"
+          ? payload.message
+          : "");
 
       if (testCases.length > 0) {
         setOutput(testCases);
@@ -110,7 +181,7 @@ export default function CodeEditor({
         setOutput([
           {
             isCorrect: false,
-            compileOutput: String(compileMessage),
+            compileOutput: toReadableOutput(compileMessage),
           },
         ]);
       } else {
@@ -134,22 +205,36 @@ export default function CodeEditor({
       await submitCode({
         language,
         code,
-        questionId,
+        problemId: questionId,
       });
     }
     toast.success("Code Submitted", { id: "submit" });
   };
 
   useEffect(() => {
+    const templateLanguages = Object.keys(templatesByLanguage);
+    if (templateLanguages.length === 0) {
+      return;
+    }
+
+    if (!templateLanguages.includes(language)) {
+      setLanguage(templateLanguages[0]);
+    }
+  }, [templatesByLanguage, language]);
+
+  useEffect(() => {
     const tpl = templatesByLanguage[language];
-    if (!tpl) return;
+    if (!tpl) {
+      setCode((prev) => (prev.trim() ? prev : STARTER_CODE[language] || ""));
+      return;
+    }
 
     if (tpl.defaultCode?.trim()) {
       setCode(tpl.defaultCode);
     } else if (tpl.functionBody) {
       setCode(tpl.functionBody);
     } else {
-      setCode("");
+      setCode(STARTER_CODE[language] || "");
     }
   }, [language, templatesByLanguage]);
 
@@ -193,6 +278,8 @@ export default function CodeEditor({
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
+            aria-label="Select programming language"
+            title="Select programming language"
             className={`
               rounded-md px-3 py-1.5 text-xs outline-none cursor-pointer
               ${Colors.background.secondary}
@@ -200,13 +287,11 @@ export default function CodeEditor({
               ${Colors.border.fadedThin}
             `}
           >
-            {languageOptions
-              .filter((lang) => templatesByLanguage[lang.value])
-              .map((lang) => (
-                <option key={lang.value} value={lang.value}>
-                  {lang.label}
-                </option>
-              ))}
+            {languageOptions.map((lang) => (
+              <option key={lang.value} value={lang.value}>
+                {lang.label}
+              </option>
+            ))}
           </select>
         </div>
 

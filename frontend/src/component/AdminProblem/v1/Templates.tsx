@@ -46,15 +46,22 @@ function Templates() {
     Record<string, string>
   >({});
 
-  /* ---------------- FETCH ---------------- */
-  useEffect(() => {
-    getAllProblemTemplate((res: Template[]) => {
+  const refreshTemplates = async (preferredLanguage?: string) => {
+    await getAllProblemTemplate((res: Template[]) => {
       setTemplates(res);
 
-      if (!res.length) return;
+      if (!res.length) {
+        setSelectedLang(null);
+        setCodeMap({});
+        setFunctionBodyMap({});
+        return;
+      }
 
-      const initialLang = res[0].language;
-      setSelectedLang(initialLang);
+      const languageToSelect =
+        preferredLanguage && res.some((t) => t.language === preferredLanguage)
+          ? preferredLanguage
+          : res[0].language;
+      setSelectedLang(languageToSelect);
 
       const defaultCodes: Record<string, string> = {};
       const functionBodies: Record<string, string> = {};
@@ -67,6 +74,21 @@ function Templates() {
       setCodeMap(defaultCodes);
       setFunctionBodyMap(functionBodies);
     }, param.id as string);
+  };
+
+  const handleCreateTemplate = async (data: {
+    language: string;
+    defaultCode: string;
+    functionBody: string;
+  }) => {
+    await createProblemTemplate(param.id as string, data);
+    await refreshTemplates(data.language);
+    setShowTemplateForm(false);
+  };
+
+  /* ---------------- FETCH ---------------- */
+  useEffect(() => {
+    refreshTemplates();
   }, [param.id]);
 
   /* ---------------- MAP ---------------- */
@@ -86,29 +108,7 @@ function Templates() {
         {showTemplateForm && (
           <ShowAddTemplateForm
             onClose={() => setShowTemplateForm(false)}
-            onSave={(data) => {
-              createProblemTemplate(param.id as string, data);
-              getAllProblemTemplate((res: Template[]) => {
-                setTemplates(res);
-
-                if (!res.length) return;
-
-                const initialLang = res[0].language;
-                setSelectedLang(initialLang);
-
-                const defaultCodes: Record<string, string> = {};
-                const functionBodies: Record<string, string> = {};
-
-                res.forEach((t) => {
-                  defaultCodes[t.language] = t.defaultCode;
-                  functionBodies[t.language] = t.functionBody;
-                });
-
-                setCodeMap(defaultCodes);
-                setFunctionBodyMap(functionBodies);
-                window.location.reload();
-              }, param.id as string);
-            }}
+            onSave={handleCreateTemplate}
           />
         )}
         No templates available
@@ -144,25 +144,7 @@ function Templates() {
       templateMap,
     );
 
-    getAllProblemTemplate((res: Template[]) => {
-      setTemplates(res);
-
-      if (!res.length) return;
-
-      const initialLang = res[0].language;
-      setSelectedLang(initialLang);
-
-      const defaultCodes: Record<string, string> = {};
-      const functionBodies: Record<string, string> = {};
-
-      res.forEach((t) => {
-        defaultCodes[t.language] = t.defaultCode;
-        functionBodies[t.language] = t.functionBody;
-      });
-
-      setCodeMap(defaultCodes);
-      setFunctionBodyMap(functionBodies);
-    }, param.id as string);
+    await refreshTemplates(selectedLang);
 
     setIsEditing(false);
   };
@@ -173,7 +155,7 @@ function Templates() {
       {showTemplateForm && (
         <ShowAddTemplateForm
           onClose={() => setShowTemplateForm(false)}
-          onSave={(data) => createProblemTemplate(param.id as string, data)}
+          onSave={handleCreateTemplate}
         />
       )}
 
@@ -231,6 +213,7 @@ function Templates() {
         </h2>
 
         <select
+          aria-label="Select template language"
           value={selectedLang}
           onChange={(e) => setSelectedLang(e.target.value)}
           className={`px-3 py-1.5 rounded-md ${Colors.background.primary} ${Colors.border.defaultThin} ${Colors.text.primary} cursor-pointer`}

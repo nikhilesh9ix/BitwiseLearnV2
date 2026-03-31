@@ -74,7 +74,7 @@ type Props = {
     language: string;
     defaultCode: string;
     functionBody: string;
-  }) => void;
+  }) => Promise<void> | void;
 };
 
 function ShowAddTemplateForm({ onClose, onSave }: Props) {
@@ -95,15 +95,14 @@ function ShowAddTemplateForm({ onClose, onSave }: Props) {
 
   const editorValue = activeTab === "defaultCode" ? defaultCode : functionBody;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const payload = {
       language,
       defaultCode,
       functionBody,
     };
 
-    onSave?.(payload);
-    window.location.reload();
+    await onSave?.(payload);
     onClose();
   };
 
@@ -119,6 +118,8 @@ function ShowAddTemplateForm({ onClose, onSave }: Props) {
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close add template form"
+            title="Close"
             className={`hover:text-red-500 ${Colors.text.primary} cursor-pointer active:scale-95 transition-all`}
           >
             <X size={20} />
@@ -128,6 +129,7 @@ function ShowAddTemplateForm({ onClose, onSave }: Props) {
         {/* Controls */}
         <div className="flex items-center justify-between px-4 py-2">
           <select
+            aria-label="Select language"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
             className={`px-3 py-1.5 rounded-md text-sm ${Colors.background.primary} ${Colors.border.defaultThin} ${Colors.text.primary} cursor-pointer`}
