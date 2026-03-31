@@ -3,20 +3,23 @@ import axios from "axios";
 const LOCALHOST_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
 const getClientBaseURL = () => {
+  const isAccessedFromLocalhost = LOCALHOST_HOSTS.has(window.location.hostname);
   const publicApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
 
+  if (!isAccessedFromLocalhost) {
+    return window.location.origin;
+  }
+
   if (!publicApiUrl) {
-    return `${window.location.protocol}//${window.location.hostname}:8000`;
+    return window.location.origin;
   }
 
   try {
     const parsedUrl = new URL(publicApiUrl);
     const isConfiguredAsLocalhost = LOCALHOST_HOSTS.has(parsedUrl.hostname);
-    const isAccessedFromLocalhost = LOCALHOST_HOSTS.has(window.location.hostname);
 
     if (isConfiguredAsLocalhost && !isAccessedFromLocalhost) {
-      const port = parsedUrl.port || "8000";
-      return `${parsedUrl.protocol}//${window.location.hostname}:${port}`;
+      return window.location.origin;
     }
 
     return publicApiUrl;
@@ -27,7 +30,7 @@ const getClientBaseURL = () => {
 
 const getBaseURL = () => {
   if (typeof window === "undefined") {
-    return process.env.BACKEND_URL;
+    return process.env.BACKEND_URL ?? process.env.NEXT_PUBLIC_API_URL;
   }
 
   return getClientBaseURL();
