@@ -17,25 +17,92 @@ A multi-tenant educational platform for institutions, vendors, and students — 
 
 ## Tech Stack
 
-### Backend
-- **Framework**: FastAPI 0.115.6 + Uvicorn
-- **Database**: Document database with Beanie 1.27.0 ODM (Motor async driver)
-- **Auth**: PyJWT, Passlib + bcrypt
-- **Queue**: RabbitMQ via aio-pika
-- **Storage**: AWS S3 (boto3), Cloudinary
-- **Code Execution**: Piston API
-- **Validation**: Pydantic 2.10.3
-- **Rate Limiting**: SlowAPI
+This project is a full-stack education platform with two backend runtime modes:
 
-### Frontend
-- **Framework**: Next.js 16 (App Router) + React 19
-- **Styling**: Tailwind CSS
-- **State**: Zustand
-- **UI**: Lucide icons, Radix UI, Framer Motion
-- **Code**: PrismJS syntax highlighting
-- **Markdown**: react-markdown with KaTeX math, GFM tables
-- **Charts**: Recharts
-- **PDF**: jsPDF + html2canvas
+- **Monolith mode (recommended for development)** in `apps/python-server`
+- **Microservices mode (deployment topology)** in `apps/*-service` plus `apps/gateway`
+
+The frontend stays the same in both modes.
+
+### Architecture At A Glance
+
+1. User interacts with the Next.js frontend.
+2. Frontend calls API routes (proxy) or backend endpoints directly.
+3. Backend handles auth, business logic, and persistence.
+4. Async/report tasks use RabbitMQ + worker where applicable.
+5. File assets are stored in S3/Cloudinary, with local fallback support in development.
+6. Code execution routes call the Piston execution service.
+
+### Frontend Stack
+
+| Area | Technology | Purpose |
+| --- | --- | --- |
+| Framework | Next.js 16 + React 19 + TypeScript | App UI, routing, rendering |
+| Styling | Tailwind CSS 4 | Utility-first styling |
+| State | Zustand | Lightweight global state stores |
+| HTTP Client | Axios | Browser and proxy API requests |
+| UI Utilities | Radix Tabs, Lucide, Framer Motion | Accessible primitives, icons, motion |
+| Data Visualization | Recharts | Report charts and analytics cards |
+| Markdown + Math | react-markdown, remark-math, rehype-katex, remark-gfm | Rich text and math rendering |
+| Code Display | PrismJS, rehype-prism-plus, Monaco Editor | Syntax highlighting and code editor experiences |
+| PDF/Reporting UI | @react-pdf/renderer, jsPDF, html2canvas | Downloadable report views and exports |
+
+### Backend Stack (Monolith Core)
+
+| Area | Technology | Purpose |
+| --- | --- | --- |
+| API Framework | FastAPI 0.115.6 | HTTP API definitions and validation |
+| Server Runtime | Uvicorn 0.34.0, Gunicorn 23.0.0 | Local dev and production serving |
+| Data Layer | Beanie 1.27.0 + Motor 3.6.0 | Async ODM over document database |
+| Validation | Pydantic 2.10.3 + pydantic-settings 2.7.0 | Request models and configuration |
+| Auth | PyJWT 2.10.1, Passlib, bcrypt | Access/refresh JWT auth and password hashing |
+| Rate Limiting | SlowAPI | Endpoint throttling |
+| Async Messaging | aio-pika 9.5.3 + RabbitMQ | Async processing and report task flow |
+| File Storage | boto3 (S3), Cloudinary SDK | Content/report storage |
+| Spreadsheet Import | openpyxl | Bulk upload workflows |
+| Templating | Jinja2 | Email/template rendering |
+| HTTP Calls | httpx | Internal/external HTTP integrations |
+
+### Code Execution Stack
+
+| Component | Technology | Purpose |
+| --- | --- | --- |
+| Execution Engine | Piston | Multi-language compile/run |
+| Supported Language Flow | Python, Java, JavaScript, C, C++ templates | Problem solving and auto-evaluation |
+| Integration Points | assessment and code routes/services | Run, submit, and testcase grading |
+
+### Storage And File Handling
+
+| Data Type | Primary Store | Dev Fallback |
+| --- | --- | --- |
+| Course content files | AWS S3 | Local uploads served by backend |
+| Media (images/videos) | Cloudinary | Local/dev fallback paths |
+| Report artifacts | S3/object URL patterns | Local/dev fallback URLs |
+
+### Deployment Topology Stack
+
+| Mode | Components |
+| --- | --- |
+| Monolith | `apps/python-server` + `frontend` |
+| Microservices | `gateway`, `auth-service`, `user-service`, `course-service`, `problem-service`, `assessment-service`, `code-service`, `notification-service`, `report-service` |
+| Shared package | `apps/shared` for common contracts/utilities |
+| Containerization | Docker + docker-compose |
+
+### Service Ports (Microservices Mode)
+
+| Service | Default Port | Responsibility |
+| --- | --- | --- |
+| gateway | 8000 | Entry-point routing |
+| auth-service | 8001 | Authentication |
+| user-service | 8002 | User domain |
+| course-service | 8003 | Courses, sections, enrollments |
+| problem-service | 8004 | DSA problem bank |
+| assessment-service | 8005 | Assessment management |
+| code-service | 8006 | Code run/submit integration |
+| notification-service | 8007 | Contact/notification flow |
+| report-service | 8008 | Report endpoints and generation |
+| piston | 2000 | Code execution engine |
+| rabbitmq | 5672 / 15672 | Queue and management UI |
 
 ## Project Structure
 
