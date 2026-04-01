@@ -227,7 +227,13 @@ const UpdateTopicModal = ({
       setTranscriptText(initialData.transcript || "");
       setTranscriptFile(null);
     }
-  }, [open, initialData]);
+  }, [
+    open,
+    initialData.name,
+    initialData.description,
+    initialData.videoUrl,
+    initialData.transcript,
+  ]);
 
   if (!open) return null;
 
@@ -1142,13 +1148,7 @@ const AddSectionV2 = ({
             setIsUpdateTopicOpen(false);
             setSelectedTopic(null);
           }}
-          initialData={{
-            name: selectedTopic.name,
-            description: selectedTopic.description,
-            transcript: selectedTopic.transcript,
-            videoUrl: selectedTopic.videoUrl,
-            file: selectedTopic.file,
-          }}
+          initialData={selectedTopic}
           onUpdate={async (data) => {
             const toastId = toast.loading("Updating Topic...");
             try {
@@ -1158,17 +1158,35 @@ const AddSectionV2 = ({
                 videoUrl: data.videoUrl,
                 transcript: data.transcript,
               });
+
+              let transcriptUploadFailed = false;
               if (data.transcriptFile) {
-                await uploadTranscript(selectedTopic.id, data.transcriptFile);
+                try {
+                  await uploadTranscript(selectedTopic.id, data.transcriptFile);
+                } catch {
+                  transcriptUploadFailed = true;
+                }
               }
-              toast.success("Topic updated!", { id: toastId });
+
+              if (transcriptUploadFailed) {
+                toast.success("Topic updated, but file upload failed", {
+                  id: toastId,
+                });
+              } else {
+                toast.success("Topic updated!", { id: toastId });
+              }
+
               //TODO: add re-fetch for topic
               window.location.reload();
               setIsUpdateTopicOpen(false);
               setSelectedTopic(null);
-            } catch (err) {
-              // console.error(err);
-              toast.error("Failed to update topic", { id: toastId });
+            } catch (error: any) {
+              const message =
+                error?.message ||
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                "Failed to update topic";
+              toast.error(message, { id: toastId });
             }
           }}
         />

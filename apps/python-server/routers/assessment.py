@@ -24,6 +24,58 @@ router = APIRouter(prefix="/api/v1/assessments", tags=["Assessments"])
 _admin_roles = require_roles(UserType.SUPERADMIN, UserType.ADMIN, UserType.INSTITUTION, UserType.VENDOR)
 
 
+def _normalize_language(language: str) -> str:
+    aliases = {
+        "JS": "JAVASCRIPT",
+        "NODE": "JAVASCRIPT",
+        "C++": "CPP",
+        "CXX": "CPP",
+    }
+    normalized = (language or "").strip().upper()
+    return aliases.get(normalized, normalized)
+
+
+async def _find_problem_template(problem_id: PydanticObjectId, language: str):
+    from models.problem_template import ProblemTemplate
+
+    template = await ProblemTemplate.find_one(
+        ProblemTemplate.problem_id == problem_id,
+        ProblemTemplate.language == language,
+    )
+    if template:
+        return template
+
+    normalized_language = _normalize_language(language)
+    if normalized_language == language:
+        return None
+
+    return await ProblemTemplate.find_one(
+        ProblemTemplate.problem_id == problem_id,
+        ProblemTemplate.language == normalized_language,
+    )
+
+
+def _compose_full_code(user_code: str, template) -> str:
+    if not template or not template.function_body:
+        return user_code
+
+    if "_solution_" in template.function_body:
+        return template.function_body.replace("_solution_", user_code)
+
+    return user_code + "\n" + template.function_body
+
+
+def _extract_stdout(result: dict) -> str:
+    run_output = result.get("run") or {}
+    stdout = (
+        run_output.get("stdout")
+        or result.get("stdout")
+        or result.get("output")
+        or ""
+    )
+    return str(stdout)
+
+
 # ========== ASSESSMENT CRUD ==========
 
 @router.post("/create-assessment")
@@ -357,44 +409,29 @@ async def submit_assessment_question(id: str, body: SubmitAssessmentQuestionRequ
         if body.code and body.language:
             from models.problem import Problem
             from models.problem_test_case import ProblemTestCase
-            from models.problem_template import ProblemTemplate
 
             if question.problem_id:
                 problem = await Problem.get(question.problem_id)
-                if problem:
-                    template = await ProblemTemplate.find_one(
-                        ProblemTemplate.problem_id == problem.id,
-                        ProblemTemplate.language == body.language,
-                    )
-                    if not template:
-                        normalized_language = (body.language or "").strip().upper()
-                        language_aliases = {
-                            "JS": "JAVASCRIPT",
-                            "NODE": "JAVASCRIPT",
-                            "C++": "CPP",
-                            "CXX": "CPP",
-                        }
-                        normalized_language = language_aliases.get(normalized_language, normalized_language)
-                        if normalized_language != body.language:
-                            template = await ProblemTemplate.find_one(
-                                ProblemTemplate.problem_id == problem.id,
-                                ProblemTemplate.language == normalized_language,
-                            )
+                if problem and problem.id:
+                    template = await _find_problem_template(problem.id, body.language)
                     test_cases = await ProblemTestCase.find(ProblemTestCase.problem_id == problem.id).to_list()
 
-                    full_code = body.code
-                    if template:
-                        if "_solution_" in template.function_body:
-                            full_code = template.function_body.replace("_solution_", body.code)
-                        else:
-                            full_code = body.code + "\n" + template.function_body
+                    full_code = _compose_full_code(body.code, template)
 
                     all_passed = True
                     for tc in test_cases:
                         result = await execute_code(body.language, full_code, tc.input)
-                        run_output = result.get("run", {})
-                        actual = (run_output.get("stdout") or "").strip()
-                        if actual != tc.output.strip():
+
+                        if result.get("error"):
+                            error_message = str(result.get("error"))
+                            details = result.get("details")
+                            if details:
+                                error_message = f"{error_message}: {details}"
+                            return api_response(503, "Code execution failed", error=error_message)
+
+                        actual = _extract_stdout(result).replace("\r\n", "\n").strip()
+                        expected = (tc.output or "").replace("\r\n", "\n").strip()
+                        if actual != expected:
                             all_passed = False
                             break
 

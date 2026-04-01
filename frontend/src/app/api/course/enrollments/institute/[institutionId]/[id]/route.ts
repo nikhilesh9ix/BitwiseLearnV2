@@ -2,30 +2,37 @@ import { NextResponse, NextRequest } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> },
+  context: { params: Promise<{ institutionId: string; id: string }> },
 ) {
   try {
-    const { id } = await context.params;
-    const token = req.cookies.get("token") || "";
-    if (!token) throw new Error("Token not found");
+    const { id, institutionId } = await context.params;
     const cookieHeader = req.headers.get("cookie");
+    const authHeader = req.headers.get("authorization");
     const res = await fetch(
       `${process.env.BACKEND_URL}/api/v1/courses/get-course-enrollments/${id}`,
       {
         headers: {
           Cookie: cookieHeader || "",
+          ...(authHeader ? { Authorization: authHeader } : {}),
         },
         credentials: "include",
       },
     );
 
-    let data = await res.json();
-    const output = data.data.data;
+    const data = await res.json();
+    const enrollments = Array.isArray(data?.data?.data) ? data.data.data : [];
+    const filtered = enrollments.filter((enrollment: any) => {
+      const institution = enrollment?.institution;
+      return (
+        institution?.id === institutionId ||
+        enrollment?.institution_id === institutionId
+      );
+    });
 
     const responseResult = {
       data: {
-        course: data.data.course,
-        data: output,
+        course: data?.data?.course ?? {},
+        data: filtered,
       },
     };
     return NextResponse.json(responseResult.data, { status: res.status });

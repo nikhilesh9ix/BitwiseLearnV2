@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     JWT_REFRESH_SECRET: str = "refresh-secret-change-me"
     RESET_TOKEN_SECRET: str = "reset-token-secret-change-me"
     FRONTEND_URL: str = "http://localhost:3000"
+    BACKEND_PUBLIC_URL: str = "http://localhost:8000"
 
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""

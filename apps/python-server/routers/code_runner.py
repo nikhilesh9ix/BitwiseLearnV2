@@ -53,6 +53,25 @@ def _compose_full_code(user_code: str, template: ProblemTemplate | None) -> str:
     return user_code + "\n" + template.function_body
 
 
+def _extract_stdout_stderr(result: dict) -> tuple[str, str]:
+    run_output = result.get("run") or {}
+
+    stdout = (
+        run_output.get("stdout")
+        or result.get("stdout")
+        or result.get("output")
+        or ""
+    )
+    stderr = (
+        run_output.get("stderr")
+        or result.get("stderr")
+        or result.get("error")
+        or ""
+    )
+
+    return str(stdout), str(stderr)
+
+
 @router.post("/run")
 async def run_code(body: RunCodeRequest, current_user: dict = Depends(get_current_user)):
     problem = await Problem.get(PydanticObjectId(body.problem_id))
@@ -81,8 +100,8 @@ async def run_code(body: RunCodeRequest, current_user: dict = Depends(get_curren
     results = []
     for tc in test_cases:
         result = await execute_code(body.language, full_code, tc.input)
-        run_output = result.get("run", {})
-        actual_output = (run_output.get("stdout") or "").strip()
+        actual_output_raw, stderr_raw = _extract_stdout_stderr(result)
+        actual_output = actual_output_raw.replace("\r\n", "\n").strip()
         expected = tc.output.strip()
         passed = actual_output == expected
         results.append({
@@ -91,7 +110,7 @@ async def run_code(body: RunCodeRequest, current_user: dict = Depends(get_curren
             "expected_output": expected,
             "actual_output": actual_output,
             "passed": passed,
-            "stderr": run_output.get("stderr", ""),
+            "stderr": stderr_raw,
             "test_type": tc.test_type,
         })
 
@@ -124,12 +143,12 @@ async def compile_code(body: CompileCodeRequest):
             )
             return api_response(400, "Compile failed", error=compile_error)
 
-    run_output = result.get("run", {})
+    stdout, stderr = _extract_stdout_stderr(result)
     return api_response(200, "Code compiled", data={
-        "stdout": run_output.get("stdout", ""),
-        "stderr": run_output.get("stderr", ""),
-        "code": run_output.get("code"),
-        "signal": run_output.get("signal"),
+        "stdout": stdout,
+        "stderr": stderr,
+        "code": (result.get("run") or {}).get("code"),
+        "signal": (result.get("run") or {}).get("signal"),
     })
 
 
@@ -156,8 +175,8 @@ async def submit_code(body: SubmitCodeRequest, current_user: dict = Depends(requ
 
     for tc in test_cases:
         result = await execute_code(body.language, full_code, tc.input)
-        run_output = result.get("run", {})
-        actual_output = (run_output.get("stdout") or "").strip()
+        actual_output_raw, _stderr_raw = _extract_stdout_stderr(result)
+        actual_output = actual_output_raw.replace("\r\n", "\n").strip()
         expected = tc.output.strip()
         passed = actual_output == expected
 
@@ -165,7 +184,7 @@ async def submit_code(body: SubmitCodeRequest, current_user: dict = Depends(requ
             "test_case_id": tc.id,
             "passed": passed,
             "actual_output": actual_output,
-            "runtime": run_output.get("code"),
+            "runtime": (result.get("run") or {}).get("code"),
             "memory": None,
         })
 

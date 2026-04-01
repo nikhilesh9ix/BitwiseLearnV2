@@ -55,6 +55,13 @@ const getStatus = (status: string) => {
 
   return "bg-yellow-500/15 text-yellow-400 border-yellow-500/30";
 };
+
+const formatAssessmentDateTime = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("en-IN");
+};
+
 const AssessmentCard = ({ assessment }: { assessment: CreateAssessment }) => {
   const [status, setStatus] = useState(assessment.status);
 
@@ -62,13 +69,18 @@ const AssessmentCard = ({ assessment }: { assessment: CreateAssessment }) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const now = new Date().toLocaleString("en-IN", {
-        timeZone: "Asia/Kolkata",
-      });
-      const start = new Date(assessment.startTime).toLocaleString("en-IN", {
-        timeZone: "Asia/Kolkata",
-      });
-      if (start <= now && status === "UPCOMING") {
+      const nowMs = Date.now();
+      const startMs = new Date(assessment.startTime).getTime();
+      const endMs = new Date(assessment.endTime).getTime();
+
+      if (!Number.isNaN(startMs) && !Number.isNaN(endMs)) {
+        if (nowMs >= endMs && status !== "ENDED") {
+          setStatus("ENDED");
+          return;
+        }
+      }
+
+      if (!Number.isNaN(startMs) && nowMs >= startMs && status === "UPCOMING") {
         setStatus("LIVE");
       }
     }, 1000); // check every second
@@ -111,13 +123,7 @@ const AssessmentCard = ({ assessment }: { assessment: CreateAssessment }) => {
       <div className="flex items-center gap-2 text-xs text-secondary-font">
         <Clock size={14} />
         <span>
-          {new Date(assessment.startTime).toLocaleString("en-IN", {
-            timeZone: "Asia/Kolkata",
-          })}{" "}
-          —{" "}
-          {new Date(assessment.endTime).toLocaleString("en-IN", {
-            timeZone: "Asia/Kolkata",
-          })}
+          {formatAssessmentDateTime(assessment.startTime)} — {formatAssessmentDateTime(assessment.endTime)}
         </span>
       </div>
 
@@ -230,12 +236,9 @@ const AddAssessmentModal = ({
 
   if (!open) return null;
 
-  const combineDateTimeToUTC = (date: string, time: string) => {
+  const combineDateTimeToPayload = (date: string, time: string) => {
     if (!date || !time) return "";
-    // Create a string with IST offset
-    const dateTimeIST = `${date}T${time}:00+05:30`;
-    // Convert to UTC date string
-    return new Date(dateTimeIST).toISOString();
+    return `${date}T${time}:00`;
   };
 
   const clearError = (field: string) => {
@@ -261,8 +264,8 @@ const AddAssessmentModal = ({
   const handleSubmit = () => {
     const payload = {
       ...form,
-      startTime: combineDateTimeToUTC(startDate, startClock),
-      endTime: combineDateTimeToUTC(endDate, endClock),
+      startTime: combineDateTimeToPayload(startDate, startClock),
+      endTime: combineDateTimeToPayload(endDate, endClock),
     };
 
     console.log(payload);

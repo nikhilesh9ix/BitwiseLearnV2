@@ -11,9 +11,9 @@ from beanie import PydanticObjectId
 
 class Student(Document):
     name: str
-    email: Indexed(str, unique=True)
+    email: str
     phone: str = ""
-    password: str
+    password: str = ""
     institution_id: Optional[PydanticObjectId] = None
     batch_id: Optional[PydanticObjectId] = None
     cloud_id: Optional[str] = None

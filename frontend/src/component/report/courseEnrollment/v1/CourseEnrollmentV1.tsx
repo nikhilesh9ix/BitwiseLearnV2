@@ -12,14 +12,12 @@ import {
   Search,
   Filter,
   Building2,
-  Layers,
-  ChevronLeft,
   ArrowLeft,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 
 type CourseInfo = {
   id?: string;
@@ -112,6 +110,8 @@ function CourseEnrollmentV1({ courseId }: { courseId: string }) {
     );
   }, [filteredEnrollments]);
 
+  const safeCourseInfo: CourseInfo = courseInfo ?? {};
+
   return (
     <div
       className={`flex gap-6  h-screen ${Colors.text.primary} ${Colors.background.secondary}`}
@@ -126,13 +126,13 @@ function CourseEnrollmentV1({ courseId }: { courseId: string }) {
           <ArrowLeft className={`${Colors.text.primary}`} />
           <p>Go Back </p>
         </div>
-        {courseInfo.thumbnail && (
+        {safeCourseInfo.thumbnail && (
           <div className="h-40 w-full overflow-hidden">
             <Image
               height={100}
               width={100}
-              src={courseInfo.thumbnail}
-              alt={courseInfo.name as string}
+              src={safeCourseInfo.thumbnail}
+              alt={safeCourseInfo.name || "Course thumbnail"}
               className="h-full w-full object-cover"
             />
           </div>
@@ -140,14 +140,14 @@ function CourseEnrollmentV1({ courseId }: { courseId: string }) {
 
         <div className="p-5 space-y-4 mt-4">
           <div>
-            <h2 className="text-lg font-semibold">{courseInfo.name}</h2>
+            <h2 className="text-lg font-semibold">{safeCourseInfo.name}</h2>
             <p className={`text-sm ${Colors.text.secondary} mt-1`}>
-              {courseInfo.level} • {courseInfo.duration}
+              {safeCourseInfo.level} • {safeCourseInfo.duration}
             </p>
           </div>
 
           <span className="inline-block px-3 py-1 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-400">
-            {courseInfo.isPublished}
+            {safeCourseInfo.isPublished}
           </span>
 
           <div className="space-y-3 text-sm">
@@ -156,7 +156,7 @@ function CourseEnrollmentV1({ courseId }: { courseId: string }) {
                 Instructor
               </p>
               <p className={`${Colors.text.secondary}`}>
-                {courseInfo.instructorName}
+                {safeCourseInfo.instructorName}
               </p>
             </div>
 
@@ -165,7 +165,7 @@ function CourseEnrollmentV1({ courseId }: { courseId: string }) {
                 Description
               </p>
               <p className={`${Colors.text.secondary}`}>
-                {courseInfo.description}
+                {safeCourseInfo.description}
               </p>
             </div>
 
@@ -205,6 +205,7 @@ function CourseEnrollmentV1({ courseId }: { courseId: string }) {
               <select
                 value={institution}
                 onChange={(e) => setInstitution(e.target.value)}
+                aria-label="Filter enrollments by institution"
                 className={`px-3 py-2 text-sm rounded-md ${Colors.background.secondary} ${Colors.border.defaultThin} ${Colors.text.primary} focus:outline-none`}
               >
                 <option value="all">All Institutions</option>
@@ -242,7 +243,7 @@ function CourseEnrollmentV1({ courseId }: { courseId: string }) {
                 {!loading &&
                   Object.entries(groupedEnrollments).map(
                     ([institutionName, items]) => (
-                      <>
+                      <Fragment key={`group-${institutionName}`}>
                         <tr
                           key={institutionName}
                           className={`${Colors.text.secondary} ${Colors.background.primary}`}
@@ -265,7 +266,7 @@ function CourseEnrollmentV1({ courseId }: { courseId: string }) {
                         {/* Rows */}
                         {items.map((item) => (
                           <tr
-                            key={item.batch.id}
+                            key={`${institutionName}-${item.batch.id || item.batch.batchname}`}
                             className={`border-b border-neutral-800 text-sm ${Colors.hover.special}`}
                           >
                             <td className="px-4 py-3"></td>
@@ -290,7 +291,7 @@ function CourseEnrollmentV1({ courseId }: { courseId: string }) {
                             </td>
                           </tr>
                         ))}
-                      </>
+                      </Fragment>
                     ),
                   )}
 

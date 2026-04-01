@@ -1,10 +1,12 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from beanie import init_beanie
+from pathlib import Path
 from config import connect_to_mongo, get_settings
 from models import ALL_MODELS
 from services.queue import close_connection as close_mq
@@ -26,6 +28,7 @@ from routers.bulk_upload import router as bulk_upload_router
 from routers.contact import router as contact_router
 
 settings = get_settings()
+LOCAL_UPLOADS_DIR = Path(__file__).resolve().parent / "uploads"
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/10minutes"])
 
@@ -64,6 +67,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+LOCAL_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(LOCAL_UPLOADS_DIR)), name="uploads")
 
 # Register routers
 app.include_router(auth_router)

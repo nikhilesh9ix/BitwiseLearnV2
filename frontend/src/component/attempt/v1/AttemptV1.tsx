@@ -328,24 +328,40 @@ useEffect(() => {
     setCurrentQuestionIndex(0);
   };
 
-  const handleSubmitQuestion = async (id: string, data: any) => {
-    await submitIndividualQuestion(id, { option: data }, "NO_CODE");
+  const handleSubmitQuestion = async (questionId: string, data: any) => {
+    await submitIndividualQuestion(id, questionId, { option: data }, "NO_CODE");
   };
   const handleCodeQuestion = async (
-    id: string,
+    questionId: string,
     data: any,
     language: string,
   ) => {
-    await submitIndividualQuestion(id, { code: data, language }, "CODE");
+    await submitIndividualQuestion(
+      id,
+      questionId,
+      { code: data, language },
+      "CODE",
+    );
   };
   async function submitAssessmentCode(language: string, code: string) {
     await handleCodeQuestion(question.id, code, language);
   }
   const handleSubmitTest = async () => {
-    const res = await submitTest(id, { tabSwitchCount });
-    const report = res?.data?.report ?? res?.report ?? null;
-    setSubmissionReport(report);
-    setShowSubmitConfirm(false);
+    try {
+      const res = await submitTest(id, { tabSwitchCount });
+      const report = res?.data?.report ?? res?.report ?? null;
+      setShowSubmitConfirm(false);
+
+      if (report) {
+        setSubmissionReport(report);
+        return;
+      }
+
+      toast.success("Assessment submitted successfully");
+      router.push(attemptConfig.redirectPath);
+    } catch {
+      toast.error("Failed to submit assessment. Please try again.");
+    }
   };
 
   if (submissionReport) {

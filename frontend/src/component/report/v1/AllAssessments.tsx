@@ -26,7 +26,7 @@ type Assessment = {
   status: "UPCOMING" | "ONGOING" | "ENDED";
   batchId: string;
   reportStatus: "NOT_REQUESTED" | "PROCESSING" | "PROCESSED";
-  report: string;
+  report?: string | null;
 };
 
 function AllAssessments() {
@@ -99,6 +99,7 @@ function AllAssessments() {
             onChange={(e) =>
               setStatus(e.target.value as "all" | Assessment["status"])
             }
+            aria-label="Filter assessments by status"
             className={`px-3 py-2 text-sm rounded-md ${Colors.background.secondary} ${Colors.border.defaultThin}
                        ${Colors.text.secondary} focus:outline-none`}
           >
@@ -155,6 +156,7 @@ function AllAssessments() {
 
             {!loading &&
               filteredAssessments.map((assessment) => (
+                // Guard external report links so Link never receives undefined href.
                 <tr
                   key={assessment.id}
                   className={`border-b border-neutral-800 text-sm ${Colors.hover.special} transition ${Colors.background.secondary} `}
@@ -239,7 +241,8 @@ function AllAssessments() {
                   <td className="px-4 py-3 text-sm text-gray-700">
                     {assessment.status === "ENDED" ? (
                       <>
-                        {assessment.reportStatus === "PROCESSED" ? (
+                        {assessment.reportStatus === "PROCESSED" &&
+                        assessment.report ? (
                           <Link
                             href={assessment.report}
                             target="_blank"
@@ -247,6 +250,13 @@ function AllAssessments() {
                           >
                             View Report
                           </Link>
+                        ) : assessment.reportStatus === "PROCESSED" ? (
+                          <button
+                            onClick={() => handleReportRequest(assessment.id)}
+                            className="rounded-md border border-blue-600 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 transition"
+                          >
+                            Regenerate Report
+                          </button>
                         ) : assessment.reportStatus === "NOT_REQUESTED" ? (
                           <button
                             onClick={() => handleReportRequest(assessment.id)}

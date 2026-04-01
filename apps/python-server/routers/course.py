@@ -21,6 +21,7 @@ from models.course_enrollment import CourseEnrollment
 from models.course_progress import CourseProgress
 from models.student import Student
 from models.batch import Batch
+from models.institution import Institution
 from enums import CourseStatus, UserType
 from services.s3 import upload_file_to_s3, delete_file_from_s3
 from services.cloudinary_service import upload_to_cloudinary, delete_from_cloudinary
@@ -864,17 +865,59 @@ async def get_individual_course_progress(id: str, current_user: dict = Depends(r
 
 @router.get("/get-course-enrollments/{id}")
 async def get_course_enrollments(id: str, current_user: dict = Depends(require_roles(UserType.SUPERADMIN, UserType.ADMIN, UserType.INSTITUTION))):
-    enrollments = await CourseEnrollment.find(CourseEnrollment.course_id == PydanticObjectId(id)).to_list()
+    course = await Course.get(PydanticObjectId(id))
+    if not course:
+        return api_response(404, "Course not found", error="Not found")
+
+    enrollments = await CourseEnrollment.find(
+        CourseEnrollment.course_id == course.id
+    ).to_list()
+
     data = []
     for e in enrollments:
         batch = await Batch.get(e.batch_id)
+        institution = None
+        if e.institution_id:
+            institution = await Institution.get(e.institution_id)
+        elif batch and batch.institution_id:
+            institution = await Institution.get(batch.institution_id)
+
         data.append({
-            "id": str(e.id), "course_id": str(e.course_id), "batch_id": str(e.batch_id),
+            # Structured shape consumed by reports UI.
+            "institution": {
+                "id": str(institution.id) if institution else str(e.institution_id) if e.institution_id else "",
+                "name": institution.name if institution else "Unknown Institution",
+            },
+            "batch": {
+                "id": str(batch.id) if batch else str(e.batch_id),
+                "batchname": batch.batchname if batch else "",
+                "branch": batch.branch if batch else "",
+            },
+
+            # Legacy fields kept for backward compatibility.
+            "id": str(e.id),
+            "course_id": str(e.course_id),
+            "batch_id": str(e.batch_id),
             "batch_name": batch.batchname if batch else None,
             "institution_id": str(e.institution_id) if e.institution_id else None,
-            "enrolled_at": e.enrolled_at.isoformat()
+            "enrolled_at": e.enrolled_at.isoformat(),
         })
-    return api_response(200, "Enrollments fetched", data=data)
+
+    return api_response(200, "Enrollments fetched", data={
+        "course": {
+            "id": str(course.id),
+            "name": course.name,
+            "description": course.description,
+            "level": course.level,
+            "duration": course.duration,
+            "thumbnail": course.thumbnail,
+            "instructor_name": course.instructor_name,
+            "certificate": course.certificate,
+            "is_published": course.is_published,
+            "created_at": course.created_at.isoformat() if course.created_at else None,
+        },
+        "data": data,
+    })
 
 
 @router.get("/get-course-enrollments-by-batch/{id}")

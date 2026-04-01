@@ -2,6 +2,9 @@
 
 import React, { useState } from "react";
 import { X } from "lucide-react";
+import toast from "react-hot-toast";
+import { createBatch } from "@/api/batches/create-batch";
+import { useInstitution } from "@/store/institutionStore";
 
 type Props = {
   openForm: (value: boolean) => void;
@@ -9,6 +12,7 @@ type Props = {
 };
 
 type BatchFormData = {
+  institutionId: string;
   batchname: string;
   branch: string;
   batchEndYear: string;
@@ -17,8 +21,11 @@ type BatchFormData = {
 const TOTAL_STEPS = 2;
 
 export default function BatchForm({ openForm, onSubmit }: Props) {
+  const institution = useInstitution();
   const [step, setStep] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<BatchFormData>({
+    institutionId: institution.info?.data?.id ?? "",
     batchname: "",
     branch: "",
     batchEndYear: "",
@@ -29,14 +36,48 @@ export default function BatchForm({ openForm, onSubmit }: Props) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const next = () => setStep(2);
+  const next = () => {
+    if (!formData.institutionId.trim()) {
+      toast.error("Institution ID is required");
+      return;
+    }
+    if (!formData.batchname.trim() || !formData.branch.trim()) {
+      toast.error("Batch name and branch are required");
+      return;
+    }
+    setStep(2);
+  };
   const back = () => setStep(1);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit?.(formData);
-    // Example: you could also send data to an API here
-    // fetch("/api/batch", { method: "POST", body: JSON.stringify(formData) })
+
+    if (!/^\d{4}$/.test(formData.batchEndYear.trim())) {
+      toast.error("Enter a valid 4-digit end year");
+      return;
+    }
+
+    const toastId = toast.loading("Creating Batch...");
+    setSubmitting(true);
+    try {
+      await createBatch({
+        institutionId: formData.institutionId.trim(),
+        batchname: formData.batchname.trim(),
+        branch: formData.branch.trim(),
+        batchEndYear: formData.batchEndYear.trim(),
+      });
+      toast.success("Batch created successfully", { id: toastId });
+      onSubmit?.(formData);
+      openForm(false);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to create batch";
+      toast.error(message, { id: toastId });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -73,16 +114,28 @@ export default function BatchForm({ openForm, onSubmit }: Props) {
           {step === 1 && (
             <>
               <Input
+                label="Institution ID"
+                name="institutionId"
+                value={formData.institutionId}
+                onChange={handleChange}
+                placeholder="Paste institution ID"
+                required
+              />
+              <Input
                 label="Batch Name"
                 name="batchname"
                 value={formData.batchname}
                 onChange={handleChange}
+                placeholder="Enter batch name"
+                required
               />
               <Input
                 label="Branch"
                 name="branch"
                 value={formData.branch}
                 onChange={handleChange}
+                placeholder="Enter branch"
+                required
               />
             </>
           )}
@@ -94,6 +147,9 @@ export default function BatchForm({ openForm, onSubmit }: Props) {
               name="batchEndYear"
               value={formData.batchEndYear}
               onChange={handleChange}
+              placeholder="e.g. 2027"
+              inputMode="numeric"
+              required
             />
           )}
 
@@ -122,9 +178,10 @@ export default function BatchForm({ openForm, onSubmit }: Props) {
             ) : (
               <button
                 type="submit"
+                disabled={submitting}
                 className="rounded-md bg-primaryBlue px-4 py-2 text-sm font-semibold text-white transition hover:bg-primaryBlue/90"
               >
-                Create Batch
+                {submitting ? "Creating..." : "Create Batch"}
               </button>
             )}
           </div>

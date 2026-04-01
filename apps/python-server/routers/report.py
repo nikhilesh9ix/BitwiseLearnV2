@@ -102,7 +102,7 @@ async def get_stats_count(current_user: dict = Depends(admin_only)):
 async def get_assessment_report(
     id: str,
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=100),
+    limit: int = Query(10, ge=1, le=1000),
     current_user: dict = Depends(not_student),
 ):
     assessment = await Assessment.get(PydanticObjectId(id))
@@ -127,14 +127,27 @@ async def get_assessment_report(
             "student_id": str(sub.student_id),
             "student_name": student.name if student else "Unknown",
             "student_email": student.email if student else "",
+            "student_roll_number": student.roll_number if student else "",
             "is_submitted": sub.is_submitted,
             "total_marks": sub.total_marks,
             "tab_switch_count": sub.tab_switch_count,
             "proctoring_status": sub.proctoring_status,
+            "student_ip": sub.student_ip,
+            "started_at": sub.started_at.isoformat() if sub.started_at else None,
             "submitted_at": sub.submitted_at.isoformat() if sub.submitted_at else None,
         })
 
     return api_response(200, "Assessment report fetched", data={
+        "assessment": {
+            "id": str(assessment.id),
+            "name": assessment.name,
+            "description": assessment.description,
+            "start_time": assessment.start_time.isoformat(),
+            "end_time": assessment.end_time.isoformat(),
+            "status": assessment.status,
+            "report_status": assessment.report_status,
+            "individual_section_time_limit": assessment.individual_section_time_limit,
+        },
         "submissions": data,
         "total": total,
         "page": page,

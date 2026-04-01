@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import PyMongoError
@@ -14,9 +14,11 @@ class Settings(BaseSettings):
     AWS_S3_REGION: str = "ap-south-1"
     AWS_S3_BUCKET: str = "bitwise-learn"
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(
+        env_file=(".env", "../python-server/.env", "../../.env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
 
 @lru_cache()

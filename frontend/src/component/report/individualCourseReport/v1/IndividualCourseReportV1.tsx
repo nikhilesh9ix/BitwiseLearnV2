@@ -1,72 +1,45 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import {
-  BarChart,
   Bar,
+  BarChart,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  CartesianGrid,
-  Legend,
 } from "recharts";
-import type { TooltipProps } from "recharts";
 import {
+  AlertCircle,
   ArrowLeft,
-  Users,
+  BookOpen,
+  Download,
+  Eye,
   FileCheck2,
-  BarChart3,
-  ClipboardList,
+  FileText,
+  Loader2,
+  Users,
 } from "lucide-react";
 
 import {
-  getColors,
-  type Colors,
-} from "@/component/general/(Color Manager)/useColors";
+  getCourseReport,
+  type CourseReportPayload,
+} from "@/api/reports/get-course-report";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/component/ui/tabs";
 import {
-  getStudentData,
-  type CourseReportStudent,
-} from "@/api/reports/get-student-data";
+  CourseReportPDF,
+  type CourseReportStats,
+} from "./CourseReportPDF";
 
-const Colors = getColors();
-const CHART_COLORS = ["#10b981", "#ef4444"];
-const PAGE_SIZE = 100;
-
-type TooltipPayload = TooltipProps<number, string>["payload"];
-
-function ProgressTooltip({
-  active,
-  payload,
-  colors,
-}: {
-  active?: boolean;
-  payload?: TooltipPayload;
-  colors: Colors;
-}) {
-  const item = payload?.[0];
-  const studentName =
-    item && typeof item.payload === "object" && item.payload && "name" in item.payload
-      ? String(item.payload.name)
-      : "";
-
-  if (!active || !item) {
-    return null;
-  }
-
-  return (
-    <div
-      className={`rounded-md ${colors.background.secondary} ${colors.border.defaultThin} px-3 py-2 text-sm`}
-    >
-      <p className={`font-medium ${colors.text.primary}`}>{studentName}</p>
-      <p className="text-emerald-400">Progress: {String(item.value ?? 0)}</p>
-    </div>
-  );
-}
+const getAssignmentSubmissions = (
+  student: CourseReportPayload["students"][number],
+) => student.courseAssignmentSubmissions ?? student.courseAssignemntSubmissions ?? [];
 
 function IndividualCourseReportV1({
   courseId,
@@ -75,232 +48,397 @@ function IndividualCourseReportV1({
   courseId: string;
   batchId: string;
 }) {
-  const [students, setStudents] = useState<CourseReportStudent[]>([]);
-  const [pageNumber, setPageNumber] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
+  const [report, setReport] = useState<CourseReportPayload | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("preview");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
-    const loadData = async () => {
-      await getStudentData(0, courseId, batchId, setStudents);
+    const loadReport = async () => {
+      setLoading(true);
+      const payload = await getCourseReport(courseId, batchId, {
+        pageNumber: 0,
+        limit: 1000,
+      });
+      setReport(payload);
+      setLoading(false);
     };
 
-    void loadData();
+    void loadReport();
   }, [courseId, batchId]);
 
-  const filteredStudents = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return students;
-    }
+  const students = useMemo(() => report?.students ?? [], [report]);
+  const course = report?.course ?? null;
+  const batch = report?.batch ?? null;
 
-    const query = searchTerm.toLowerCase();
-    return students.filter(
+  const stats = useMemo<CourseReportStats>(() => {
+    const totalStudents = students.length;
+    const activeStudents = students.filter(
       (student) =>
+        student.courseProgresses.length > 0 ||
+        getAssignmentSubmissions(student).length > 0,
+    ).length;
+    const studentsWithAssignments = students.filter(
+      (student) => getAssignmentSubmissions(student).length > 0,
+    ).length;
+    const studentsWithFullProgress =
+      report?.totalCourseTopics && report.totalCourseTopics > 0
+        ? students.filter(
+            (student) =>
+              student.courseProgresses.length >= report.totalCourseTopics,
+          ).length
+        : 0;
+
+    return {
+      totalStudents,
+      activeStudents,
+      completionRate:
+        totalStudents > 0
+          ? Math.round((studentsWithFullProgress / totalStudents) * 100)
+          : 0,
+      assignmentSubmissionRate:
+        totalStudents > 0
+          ? Math.round((studentsWithAssignments / totalStudents) * 100)
+          : 0,
+      averageCompletedTopics:
+        totalStudents > 0
+          ? Math.round(
+              students.reduce(
+                (total, student) => total + student.courseProgresses.length,
+                0,
+              ) / totalStudents,
+            )
+          : 0,
+    };
+  }, [report, students]);
+
+  const progressChartData = useMemo(
+    () =>
+      [...students]
+        .sort(
+          (left, right) =>
+            right.courseProgresses.length - left.courseProgresses.length,
+        )
+        .slice(0, 8)
+        .map((student) => ({
+          name: student.name.split(" ")[0] ?? student.name,
+          progress: student.courseProgresses.length,
+        })),
+    [students],
+  );
+
+  const assignmentChartData = useMemo(
+    () => [
+      {
+        name: "Submitted",
+        value: students.filter(
+          (student) => getAssignmentSubmissions(student).length > 0,
+        ).length,
+        color: "#10b981",
+      },
+      {
+        name: "Pending",
+        value: students.filter(
+          (student) => getAssignmentSubmissions(student).length === 0,
+        ).length,
+        color: "#ef4444",
+      },
+    ],
+    [students],
+  );
+
+  const filteredStudents = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    return students.filter((student) => {
+      const matchesSearch =
+        !query ||
         student.name.toLowerCase().includes(query) ||
-        student.rollNumber.toLowerCase().includes(query),
+        student.rollNumber.toLowerCase().includes(query);
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" &&
+          getAssignmentSubmissions(student).length > 0) ||
+        (statusFilter === "pending" &&
+          getAssignmentSubmissions(student).length === 0);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchTerm, statusFilter, students]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center gap-3">
+        <Loader2 className="h-7 w-7 animate-spin text-emerald-400" />
+        <span className="text-sm text-neutral-400">Generating report data...</span>
+      </div>
     );
-  }, [students, searchTerm]);
+  }
 
-  const totalPages = Math.ceil(filteredStudents.length / PAGE_SIZE);
-  const paginatedStudents = useMemo(() => {
-    const start = pageNumber * PAGE_SIZE;
-    return filteredStudents.slice(start, start + PAGE_SIZE);
-  }, [filteredStudents, pageNumber]);
-
-  const totalStudents = students.length;
-  const submittedCount = students.filter(
-    (student) => student.courseAssignemntSubmissions.length > 0,
-  ).length;
-  const notSubmittedCount = totalStudents - submittedCount;
-  const submissionRate =
-    totalStudents > 0
-      ? ((submittedCount / totalStudents) * 100).toFixed(1)
-      : "0";
-
-  const progressChartData = students.map((student) => ({
-    name: student.name.split(" ")[0],
-    progress: student.courseProgresses.length,
-  }));
-
-  const assignmentStats = [
-    { name: "Submitted", value: submittedCount },
-    { name: "Pending", value: notSubmittedCount },
-  ];
-
-  return (
-    <div
-      className={`min-h-screen ${Colors.background.primary} ${Colors.text.primary} p-6`}
-    >
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
+  if (!course || !batch || !report) {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center p-6">
+        <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-8 text-center">
+          <AlertCircle className="mx-auto mb-4 h-12 w-12 text-amber-400" />
+          <h1 className="text-xl font-semibold">Failed to load report</h1>
+          <p className="mt-2 text-sm text-neutral-400">
+            The course report data could not be loaded.
+          </p>
           <button
-            onClick={() =>
-              router.push(`/admin-dashboard/reports/courses/${courseId}`)
-            }
-            className={`flex items-center gap-2 text-sm ${Colors.text.secondary} ${Colors.hover.textSpecial} cursor-pointer transition`}
+            onClick={() => router.back()}
+            className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-200 transition hover:bg-neutral-800"
           >
-            <ArrowLeft size={18} />
-            Back to Courses
+            <ArrowLeft className="h-4 w-4" />
+            Go Back
           </button>
         </div>
+      </div>
+    );
+  }
 
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-1 bg-emerald-500 rounded-full" />
-          <h1 className="text-2xl font-semibold">Individual Course Report</h1>
-        </div>
+  const safeName = `${course.name}_${batch.batchname}`.replace(/[^a-z0-9]/gi, "_");
+  const pdfFileName = `${safeName || "course"}_Report.pdf`;
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <StatCard
-            title="Total Students"
-            value={totalStudents}
-            icon={<Users />}
-          />
-          <StatCard
-            title="Submission Rate"
-            value={`${submissionRate}%`}
-            icon={<FileCheck2 />}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card
-            title="Student Progress"
-            subtitle="Completed modules per student"
-            icon={<BarChart3 />}
-          >
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={progressChartData}>
-                <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />
-                <XAxis dataKey="name" stroke="#a1a1aa" />
-                <YAxis stroke="#a1a1aa" />
-                <Tooltip content={<ProgressTooltip colors={Colors} />} />
-                <Bar
-                  dataKey="progress"
-                  fill="#10b981"
-                  radius={[6, 6, 0, 0]}
-                  maxBarSize={50}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-
-          <Card
-            title="Assignment Status"
-            subtitle="Submission overview"
-            icon={<ClipboardList />}
-          >
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={assignmentStats}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={4}
-                >
-                  {assignmentStats.map((_, index) => (
-                    <Cell key={index} fill={CHART_COLORS[index]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
-        </div>
-
-        <div
-          className={`rounded-lg ${Colors.border.defaultThin} ${Colors.background.secondary} overflow-hidden`}
-        >
-          <div
-            className={`flex items-center justify-between gap-2 p-5 border-b ${Colors.border.defaultThin}`}
-          >
-            <div className="flex items-center gap-2">
-              <ClipboardList size={18} />
-              <h2 className={`font-medium ${Colors.text.primary}`}>
-                Student Summary
-              </h2>
+  return (
+    <div className="min-h-screen bg-neutral-950 text-white">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-6">
+        <div className="flex flex-col gap-4 rounded-3xl border border-neutral-800 bg-neutral-900/90 p-6 shadow-2xl shadow-black/20">
+          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+            <div>
+              <button
+                onClick={() => router.push(`/admin-dashboard/reports/courses/${courseId}`)}
+                className="mb-4 inline-flex cursor-pointer items-center gap-2 text-sm text-neutral-400 transition hover:text-white"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-emerald-500/15 p-3 text-emerald-300">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-semibold">{course.name}</h1>
+                  <p className="mt-1 text-sm text-neutral-400">
+                    Batch report for {batch.batchname} with progress and assignment analytics.
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <input
-              type="text"
-              placeholder="Search by name or roll number"
-              className={`rounded ${Colors.background.primary} text-sm p-2 ${Colors.text.primary} placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-300`}
-              value={searchTerm}
-              onChange={(event) => {
-                setSearchTerm(event.target.value);
-                setPageNumber(0);
-              }}
+            <PDFDownloadLink
+              document={<CourseReportPDF report={report} stats={stats} />}
+              fileName={pdfFileName}
+            >
+              {({ loading: pdfLoading }) => (
+                <button
+                  className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-70"
+                  disabled={pdfLoading}
+                >
+                  {pdfLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Preparing PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4" />
+                      Download PDF
+                    </>
+                  )}
+                </button>
+              )}
+            </PDFDownloadLink>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              icon={<Users className="h-5 w-5" />}
+              label="Students"
+              value={stats.totalStudents}
+            />
+            <StatCard
+              icon={<FileCheck2 className="h-5 w-5" />}
+              label="Active"
+              value={stats.activeStudents}
+            />
+            <StatCard
+              icon={<BookOpen className="h-5 w-5" />}
+              label="Completion"
+              value={stats.completionRate}
+              suffix="%"
+            />
+            <StatCard
+              icon={<FileText className="h-5 w-5" />}
+              label="Assignments"
+              value={stats.assignmentSubmissionRate}
+              suffix="%"
             />
           </div>
 
-          <table className="w-full text-sm">
-            <thead
-              className={`${Colors.background.primary} ${Colors.text.primary}`}
-            >
-              <tr>
-                <th className="text-left p-4">Name</th>
-                <th className="text-left p-4">Roll No</th>
-                <th className="text-left p-4">Progress</th>
-                <th className="text-left p-4">Assignments</th>
-                <th className="text-left p-4">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedStudents.map((student) => (
-                <tr
-                  key={student.id}
-                  className={`border-t border-zinc-800 ${Colors.hover.special}`}
-                >
-                  <td className="p-4">{student.name}</td>
-                  <td className="p-4 text-zinc-400">{student.rollNumber}</td>
-                  <td className="p-4 text-emerald-400">
-                    {student.courseProgresses.length}
-                  </td>
-                  <td className="p-4">
-                    {student.courseAssignemntSubmissions.length}
-                  </td>
-                  <td className="p-4">
-                    {student.courseAssignemntSubmissions.length > 0 ? (
-                      <span className="text-emerald-400">Submitted</span>
-                    ) : (
-                      <span className="text-red-400">Pending</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {paginatedStudents.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="text-center p-4 text-zinc-400">
-                    No students found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-950/70 p-4">
+              <div className="mb-4">
+                <h2 className="text-sm font-medium text-neutral-200">Top Progress</h2>
+                <p className="text-xs text-neutral-500">
+                  Learners with the most completed course topics.
+                </p>
+              </div>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={progressChartData}>
+                  <XAxis dataKey="name" tick={{ fill: "#a3a3a3", fontSize: 11 }} />
+                  <YAxis tick={{ fill: "#a3a3a3", fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "#171717",
+                      border: "1px solid #262626",
+                      borderRadius: 12,
+                      color: "#ffffff",
+                    }}
+                  />
+                  <Bar dataKey="progress" radius={[8, 8, 0, 0]} fill="#10b981" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
 
-          <div className="flex justify-between items-center p-4 border-t border-zinc-800">
-            <button
-              disabled={pageNumber === 0}
-              onClick={() => setPageNumber((page) => Math.max(0, page - 1))}
-              className={`px-4 py-2 rounded ${Colors.background.special} ${Colors.text.primary} cursor-pointer disabled:opacity-40`}
-            >
-              Prev
-            </button>
-            <span className={`text-sm ${Colors.text.secondary}`}>
-              Page {pageNumber + 1} of {totalPages || 1}
-            </span>
-            <button
-              disabled={pageNumber + 1 >= totalPages}
-              onClick={() =>
-                setPageNumber((page) => Math.min(page + 1, totalPages - 1))
-              }
-              className={`px-4 py-2 rounded ${Colors.background.special} ${Colors.text.primary} cursor-pointer disabled:opacity-40`}
-            >
-              Next
-            </button>
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-950/70 p-4">
+              <div className="mb-4">
+                <h2 className="text-sm font-medium text-neutral-200">Assignment Status</h2>
+                <p className="text-xs text-neutral-500">
+                  How many learners have submitted at least one assignment.
+                </p>
+              </div>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={assignmentChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={65}
+                    outerRadius={95}
+                    paddingAngle={4}
+                  >
+                    {assignmentChartData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      background: "#171717",
+                      border: "1px solid #262626",
+                      borderRadius: 12,
+                      color: "#ffffff",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {assignmentChartData.map((entry) => (
+                  <div
+                    key={entry.name}
+                    className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1 text-xs text-neutral-300"
+                  >
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: entry.color }}
+                    />
+                    {entry.name}: {entry.value}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
+        </div>
+
+        <div className="rounded-3xl border border-neutral-800 bg-neutral-900/90 p-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <TabsList className="bg-neutral-950">
+                <TabsTrigger value="preview" className="text-neutral-300">
+                  <Eye className="h-4 w-4" />
+                  PDF Preview
+                </TabsTrigger>
+                <TabsTrigger value="students" className="text-neutral-300">
+                  <Users className="h-4 w-4" />
+                  Student Data
+                </TabsTrigger>
+              </TabsList>
+
+              <div className="flex flex-col gap-3 md:flex-row">
+                <input
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search name or roll number..."
+                  className="rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm text-white outline-none transition placeholder:text-neutral-500 focus:border-emerald-500"
+                />
+                <select
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value)}
+                  aria-label="Filter students by activity status"
+                  className="rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm text-white outline-none transition focus:border-emerald-500"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </div>
+            </div>
+
+            <TabsContent value="preview" className="mt-6">
+              <div className="h-[720px] overflow-hidden rounded-2xl border border-neutral-800 bg-white">
+                <PDFViewer width="100%" height="100%" showToolbar>
+                  <CourseReportPDF report={report} stats={stats} />
+                </PDFViewer>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="students" className="mt-6">
+              <div className="overflow-hidden rounded-2xl border border-neutral-800">
+                <div className="grid grid-cols-[2fr,1fr,1fr,1fr,1.2fr] gap-3 border-b border-neutral-800 bg-neutral-950/80 px-4 py-3 text-xs uppercase tracking-[0.2em] text-neutral-500">
+                  <span>Student</span>
+                  <span>Roll No</span>
+                  <span>Topics</span>
+                  <span>Assignments</span>
+                  <span>Status</span>
+                </div>
+
+                <div className="max-h-[720px] overflow-y-auto">
+                  {filteredStudents.map((student) => {
+                    const assignmentSubmissions = getAssignmentSubmissions(student);
+                    const isActive = assignmentSubmissions.length > 0;
+
+                    return (
+                      <div
+                        key={student.id}
+                        className="grid grid-cols-[2fr,1fr,1fr,1fr,1.2fr] gap-3 border-b border-neutral-800 px-4 py-4 text-sm text-neutral-200 transition hover:bg-neutral-950/50"
+                      >
+                        <span className="font-medium text-white">{student.name}</span>
+                        <span className="text-neutral-400">{student.rollNumber}</span>
+                        <span>{student.courseProgresses.length}</span>
+                        <span>{assignmentSubmissions.length}</span>
+                        <span
+                          className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-medium ${
+                            isActive
+                              ? "bg-emerald-500/15 text-emerald-400"
+                              : "bg-rose-500/15 text-rose-400"
+                          }`}
+                        >
+                          {isActive ? "Active" : "Pending"}
+                        </span>
+                      </div>
+                    );
+                  })}
+
+                  {filteredStudents.length === 0 && (
+                    <div className="px-4 py-12 text-center text-sm text-neutral-500">
+                      No students match the current search and status filters.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
@@ -308,54 +446,28 @@ function IndividualCourseReportV1({
 }
 
 function StatCard({
-  title,
+  icon,
+  label,
   value,
-  icon,
+  suffix,
 }: {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
+  icon: ReactNode;
+  label: string;
+  value: number;
+  suffix?: string;
 }) {
   return (
-    <div
-      className={`flex items-center justify-between rounded-lg border ${Colors.border.defaultThin} ${Colors.background.secondary} p-5`}
-    >
-      <div>
-        <p className={`text-sm ${Colors.text.secondary}`}>{title}</p>
-        <p className={`text-3xl font-semibold mt-1 ${Colors.text.primary}`}>
-          {value}
-        </p>
+    <div className="rounded-2xl border border-neutral-800 bg-neutral-950/70 p-4">
+      <div className="flex items-center justify-between">
+        <span className="rounded-xl bg-neutral-900 p-2 text-emerald-300">{icon}</span>
+        <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">{label}</p>
       </div>
-      <div className="text-emerald-500">{icon}</div>
-    </div>
-  );
-}
-
-function Card({
-  title,
-  subtitle,
-  icon,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={`rounded-lg border ${Colors.border.defaultThin} ${Colors.background.secondary} p-5`}
-    >
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-emerald-500">{icon}</span>
-        <h3 className="font-medium">{title}</h3>
-      </div>
-      <p className={`text-sm ${Colors.text.secondary} mb-4`}>{subtitle}</p>
-      {children}
+      <p className="mt-5 text-3xl font-semibold text-white">
+        {value}
+        {suffix ?? ""}
+      </p>
     </div>
   );
 }
 
 export default IndividualCourseReportV1;
-
-

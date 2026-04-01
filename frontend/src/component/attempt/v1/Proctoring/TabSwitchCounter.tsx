@@ -18,17 +18,7 @@ export function useTabSwitchCounter(started: boolean) {
         lastHiddenTime.current = Date.now();
       } else {
         if (lastHiddenTime.current !== null) {
-          setCount((prev) => {
-            const next = prev + 1;
-
-            toast.error(`Tab switch detected (${next}/3)`, {
-              duration: 1500,
-              position: "top-right",
-              style: { background: "#000", color: "#fff" },
-            });
-
-            return next;
-          });
+          setCount((prev) => prev + 1);
 
           lastHiddenTime.current = null;
         }
@@ -45,6 +35,16 @@ export function useTabSwitchCounter(started: boolean) {
       window.removeEventListener("focus", handleVisibility);
     };
   }, []);
+
+  useEffect(() => {
+    if (count === 0) return;
+
+    toast.error(`Tab switch detected (${count}/3)`, {
+      duration: 1500,
+      position: "top-right",
+      style: { background: "#000", color: "#fff" },
+    });
+  }, [count]);
 
   return count;
 }

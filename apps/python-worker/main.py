@@ -22,15 +22,20 @@ async def main():
     scheduler.add_job(
         check_assessment_status,
         "interval",
-        minutes=30,
+        minutes=1,
         id="assessment_status_check",
     )
     scheduler.start()
-    print("APScheduler started — assessment status check every 30 minutes")
+    print("APScheduler started — assessment status check every 1 minute")
 
-    # Start RabbitMQ consumer
-    connection = await start_consumer("assessment-report", process_assessment_report)
-    print("RabbitMQ consumer started — listening on 'assessment-report' queue")
+    # Start RabbitMQ consumer (optional in local setups without MQ)
+    connection = None
+    try:
+        connection = await start_consumer("assessment-report", process_assessment_report)
+        print("RabbitMQ consumer started — listening on 'assessment-report' queue")
+    except Exception as exc:
+        print(f"RabbitMQ consumer unavailable: {exc}")
+        print("Continuing with cron-only mode (direct fallback processing enabled)")
 
     try:
         # Keep the worker running
@@ -40,7 +45,8 @@ async def main():
         print("Shutting down worker...")
     finally:
         scheduler.shutdown()
-        await connection.close()
+        if connection is not None:
+            await connection.close()
         client.close()
         print("Worker shutdown complete")
 
